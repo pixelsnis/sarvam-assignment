@@ -1,0 +1,1 @@
+- Do not build the iOS app via `xcodebuild`.

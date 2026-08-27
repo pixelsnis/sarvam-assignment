@@ -1,0 +1,18 @@
+# macOS metadata
+.DS_Store
+
+# Xcode user-specific state and build output
+**/xcuserdata/
+**/DerivedData/
+*.xcuserstate
+
+# Common JavaScript dependencies and build output
+node_modules/
+dist/
+build/
+.next/
+
+# Local environment files
+.env
+.env.*
+!.env.example
