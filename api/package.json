@@ -1,0 +1,28 @@
+{
+  "name": "api",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun --watch index.ts",
+    "start": "bun index.ts",
+    "typecheck": "tsc --noEmit",
+    "auth:generate": "better-auth generate --config src/auth.ts --output src/db/schema.ts --yes",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
+  },
+  "devDependencies": {
+    "@better-auth/cli": "^1.4.21",
+    "@types/bun": "latest",
+    "drizzle-kit": "^0.31.10"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "better-auth": "^1.7.2",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.13.5",
+    "postgres": "^3.4.9"
+  }
+}
