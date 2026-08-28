@@ -21,10 +21,14 @@ extension SetupView {
     // MARK: Input
     
     var emailOrPhone: String = ""
+    var otp: String = ""
+    var name: String = ""
     
     // MARK: State
     
+    var stage: SetupStage = .intro
     var inputFieldFocused = false
+    var error: String?
     
     // MARK: Computed Properties
     
@@ -52,6 +56,17 @@ extension SetupView {
       }
 
       return .unknown
+    }
+
+    var isNameValid: Bool {
+      let normalizedName = name.precomposedStringWithCanonicalMapping
+      let hasAlphanumeric = normalizedName.unicodeScalars.contains {
+        CharacterSet.alphanumerics.contains($0)
+      }
+
+      return hasAlphanumeric && normalizedName.unicodeScalars.allSatisfy {
+        CharacterSet.alphanumerics.contains($0) || CharacterSet.nonBaseCharacters.contains($0)
+      }
     }
   }
 }

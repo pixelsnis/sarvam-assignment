@@ -33,6 +33,10 @@ struct SetupView: View {
     .animation(.default, value: showAllActions)
     .scrollDismissesKeyboard(.interactively)
     .padding()
+    .toolbar {
+      Self.Toolbar()
+    }
+    .animation(.default, value: vm.stage)
     .environment(vm)
   }
 }
