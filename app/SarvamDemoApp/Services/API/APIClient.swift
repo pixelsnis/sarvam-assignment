@@ -1,7 +1,7 @@
 import Alamofire
 import Foundation
 
-final class APIClient {
+nonisolated final class APIClient {
   struct Configuration {
     let baseURL: URL
 
@@ -22,6 +22,7 @@ final class APIClient {
   lazy var accountAPI = Account(client: self)
   lazy var authAPI = Auth(client: self)
   lazy var transcriptionsAPI = Transcriptions(client: self)
+  lazy var chatsAPI = Chats(client: self)
 
   init(configuration: Configuration = .default, session: URLSession? = nil) {
     self.configuration = configuration

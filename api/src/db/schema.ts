@@ -2,9 +2,13 @@ import { relations } from "drizzle-orm";
 import {
   boolean,
   index,
+  integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
+  uuid,
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
@@ -79,9 +83,44 @@ export const verification = pgTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
+export const chat = pgTable(
+  "chat",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [index("chat_user_updated_idx").on(table.userId, table.updatedAt)],
+);
+
+export const chatMessage = pgTable(
+  "chat_message",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    chatId: uuid("chat_id")
+      .notNull()
+      .references(() => chat.id, { onDelete: "cascade" }),
+    sequence: integer("sequence").generatedAlwaysAsIdentity().notNull(),
+    role: text("role", { enum: ["user", "assistant"] }).notNull(),
+    content: jsonb("content").notNull(),
+    modelMessage: jsonb("model_message").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("chat_message_chat_sequence_idx").on(
+      table.chatId,
+      table.sequence,
+    ),
+  ],
+);
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
+  chats: many(chat),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -95,5 +134,20 @@ export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
     fields: [account.userId],
     references: [user.id],
+  }),
+}));
+
+export const chatRelations = relations(chat, ({ one, many }) => ({
+  user: one(user, {
+    fields: [chat.userId],
+    references: [user.id],
+  }),
+  messages: many(chatMessage),
+}));
+
+export const chatMessageRelations = relations(chatMessage, ({ one }) => ({
+  chat: one(chat, {
+    fields: [chatMessage.chatId],
+    references: [chat.id],
   }),
 }));

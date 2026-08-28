@@ -17,7 +17,11 @@ final class Auth {
   var lifecycleTask: Task<Void, Never>?
   var isRefreshing = false
 
-  init(apiClient: APIClient = .shared) {
+  init() {
+    self.apiClient = .shared
+  }
+
+  init(apiClient: APIClient) {
     self.apiClient = apiClient
   }
 

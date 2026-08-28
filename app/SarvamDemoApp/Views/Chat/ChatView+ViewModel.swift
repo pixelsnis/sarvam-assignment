@@ -33,9 +33,14 @@ extension ChatView {
       transcriptionsAPI = APIClient.transcriptions
     }
 
+    init(audioRecorder: AudioRecorder) {
+      self.audioRecorder = audioRecorder
+      self.transcriptionsAPI = APIClient.transcriptions
+    }
+
     init(
       audioRecorder: AudioRecorder,
-      transcriptionsAPI: APIClient.Transcriptions = APIClient.transcriptions
+      transcriptionsAPI: APIClient.Transcriptions
     ) {
       self.audioRecorder = audioRecorder
       self.transcriptionsAPI = transcriptionsAPI
@@ -77,8 +82,9 @@ extension ChatView {
       dictationGeneration &+= 1
       let generation = dictationGeneration
 
-      let task = Task { [weak self] in
-        await self?.transcribe(fileAt: fileURL, generation: generation)
+      let task = Task<Void, Never> { [weak self] in
+        guard let self else { return }
+        await self.transcribe(fileAt: fileURL, generation: generation)
       }
       transcriptionTask = task
 
@@ -100,11 +106,11 @@ extension ChatView {
 
     private func transcribe(fileAt fileURL: URL, generation: UInt) async {
       defer {
-        guard generation == dictationGeneration else { return }
-
-        transcriptionTask = nil
-        dictationState = .idle
-        isTranscribing = false
+        if generation == dictationGeneration {
+          transcriptionTask = nil
+          dictationState = .idle
+          isTranscribing = false
+        }
       }
 
       guard !Task.isCancelled else { return }
