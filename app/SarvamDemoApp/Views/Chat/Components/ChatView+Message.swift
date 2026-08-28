@@ -31,13 +31,8 @@ extension ChatView {
   }
 
   private static func eyebrowState(
-    for chunks: [APIClient.ChatStreamChunk],
-    visibleText: String?
+    for chunks: [APIClient.ChatStreamChunk]
   ) -> AssistantEyebrowState {
-    guard visibleText == nil else {
-      return .hidden
-    }
-
     guard let latestChunk = chunks.last else {
       return .visible("")
     }
@@ -126,8 +121,7 @@ extension ChatView {
 
     private var eyebrowState: AssistantEyebrowState {
       ChatView.eyebrowState(
-        for: message.chunks,
-        visibleText: message.visibleTextContent
+        for: message.chunks
       )
     }
 
