@@ -75,7 +75,27 @@ Create an empty chat:
 POST /chats/new
 ```
 
-The response is `201 { "id": "..." }`. Stream a turn against that chat:
+The response is `201 { "id": "..." }`.
+
+List the authenticated user's chats, ordered by most recently updated:
+
+```text
+GET /chats
+```
+
+The response is an array of chat summaries:
+
+```json
+[
+  {
+    "id": "...",
+    "createdAt": "2026-08-28T10:00:00.000Z",
+    "updatedAt": "2026-08-28T10:02:00.000Z"
+  }
+]
+```
+
+Stream a turn against that chat:
 
 ```text
 POST /chats/:id/stream
@@ -92,11 +112,34 @@ The stream is Server-Sent Events. Each `data` payload is a flat JSON event:
 { "type": "status", "status": "thinking" }
 { "type": "text-delta", "text": "..." }
 { "type": "status", "status": "complete" }
-{ "type": "end", "sessionId": "...", "finishReason": "stop" }
+{ "type": "end", "sessionId": "...", "finishReason": "stop", "messages": [
+  { "id": "...", "role": "user", "text": "Help me plan my workday." },
+  { "id": "...", "role": "assistant", "text": "...", "reasoningDurationSeconds": 1.42 }
+] }
 ```
 
 Tool events use `toolId`, `toolName`, and a UI-friendly `label`. Tools are not
-currently configured. Attachments are not accepted by this API slice.
+currently configured. Attachments are not accepted by this API slice. The
+`end.messages` payload contains the canonical user and assistant messages for
+the completed turn. For the complete ordered transcript, fetch the chat:
+
+```text
+GET /chats/:id
+```
+
+```json
+{
+  "id": "...",
+  "messages": [
+    { "id": "...", "role": "user", "text": "..." },
+    { "id": "...", "role": "assistant", "text": "...", "reasoningDurationSeconds": 1.42 }
+  ]
+}
+```
+
+Server-side chat history continues to use AI SDK `ModelMessage` values. The
+client-facing messages are intentionally flattened to user/assistant text;
+non-text content and tool metadata are omitted.
 
 ## Run the API
 
@@ -113,6 +156,8 @@ Routes:
 - `GET /health` — API liveness check.
 - `GET /auth/*` and `POST /auth/*` — Better Auth endpoints, including email OTP authentication.
 - `POST /chats/new` — create an authenticated chat.
+- `GET /chats` — list authenticated chat summaries.
+- `GET /chats/:id` — fetch an authenticated chat transcript.
 - `POST /chats/:id/stream` — stream an authenticated chat turn as SSE.
 
 Type-check the project with:

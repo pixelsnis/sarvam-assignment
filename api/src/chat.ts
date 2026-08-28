@@ -6,7 +6,7 @@ import {
   type TextStreamPart,
   type ToolSet,
 } from "ai";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import type { Context } from "hono";
 import {
   SSEStreamingApi,
@@ -20,7 +20,11 @@ import {
   decodeStoredMessages,
   getToolLabel,
   InvalidChatHistoryError,
+  toChatMessage,
   type ChatRequest,
+  type ChatMessage,
+  type ChatResponse,
+  type ChatSummary,
   type ChatStreamEvent,
 } from "./chat-contract";
 import { db } from "./db";
@@ -50,6 +54,7 @@ export type ChatDependencies = {
   ) => Promise<{ user: { id: string } } | null>;
   createModel: () => LanguageModel;
   streamText: (options: ChatStreamTextOptions) => ChatStreamResult;
+  now: () => number;
 };
 
 class ChatHttpError extends Error {
@@ -132,7 +137,7 @@ async function parseChatRequest(c: Context): Promise<ChatRequest> {
   return parsed.data;
 }
 
-async function loadChatMessages(
+async function loadChatHistory(
   database: ChatDatabase,
   chatId: string,
   userId: string,
@@ -149,8 +154,10 @@ async function loadChatMessages(
 
   const rows = await database
     .select({
+      id: chatMessageTable.id,
       message: chatMessageTable.message,
       position: chatMessageTable.position,
+      reasoningDurationSeconds: chatMessageTable.reasoningDurationSeconds,
     })
     .from(chatMessageTable)
     .where(eq(chatMessageTable.chatId, chatId))
@@ -158,9 +165,19 @@ async function loadChatMessages(
 
   try {
     const messages = decodeStoredMessages(rows.map((row) => row.message));
+    const chatMessages = rows.flatMap((row, index) => {
+      const message = toChatMessage(
+        row.id,
+        messages[index]!,
+        row.reasoningDurationSeconds,
+      );
+
+      return message ? [message] : [];
+    });
 
     return {
       messages,
+      chatMessages,
       nextPosition: (rows.at(-1)?.position ?? -1) + 1,
     };
   } catch (error) {
@@ -185,13 +202,17 @@ async function appendMessage(
   chatId: string,
   position: number,
   message: ModelMessage,
-): Promise<void> {
+  reasoningDurationSeconds: number | null = null,
+): Promise<string> {
+  const id = crypto.randomUUID();
+
   await database.transaction(async (transaction) => {
     await transaction.insert(chatMessageTable).values({
-      id: crypto.randomUUID(),
+      id,
       chatId,
       position,
       message: JSON.stringify(message),
+      reasoningDurationSeconds,
     });
 
     await transaction
@@ -199,6 +220,8 @@ async function appendMessage(
       .set({ updatedAt: new Date() })
       .where(eq(chatTable.id, chatId));
   });
+
+  return id;
 }
 
 function createSarvamModel() {
@@ -245,6 +268,7 @@ function createSarvamDependencies(): ChatDependencies {
     getSession: defaultGetSession,
     createModel: createSarvamModel,
     streamText: defaultStreamText,
+    now: () => performance.now(),
   };
 }
 
@@ -267,6 +291,51 @@ export function createChatHandlers(
     }
   }
 
+  async function getChat(c: Context): Promise<Response> {
+    try {
+      const user = await getAuthenticatedUser(c, dependencies.getSession);
+      const chatId = c.req.param("id");
+
+      if (!chatId) {
+        throw new ChatHttpError(404, "chat_not_found", "Chat not found.");
+      }
+
+      const { chatMessages } = await loadChatHistory(
+        dependencies.database,
+        chatId,
+        user.id,
+      );
+
+      const response: ChatResponse = {
+        id: chatId,
+        messages: chatMessages,
+      };
+
+      return c.json(response);
+    } catch (error) {
+      return errorResponse(c, error);
+    }
+  }
+
+  async function listChats(c: Context): Promise<Response> {
+    try {
+      const user = await getAuthenticatedUser(c, dependencies.getSession);
+      const chats: ChatSummary[] = await dependencies.database
+        .select({
+          id: chatTable.id,
+          createdAt: chatTable.createdAt,
+          updatedAt: chatTable.updatedAt,
+        })
+        .from(chatTable)
+        .where(eq(chatTable.userId, user.id))
+        .orderBy(desc(chatTable.updatedAt), desc(chatTable.createdAt));
+
+      return c.json(chats);
+    } catch (error) {
+      return errorResponse(c, error);
+    }
+  }
+
   async function streamChat(c: Context): Promise<Response> {
     try {
       const user = await getAuthenticatedUser(c, dependencies.getSession);
@@ -277,7 +346,7 @@ export function createChatHandlers(
         throw new ChatHttpError(404, "chat_not_found", "Chat not found.");
       }
 
-      const { messages, nextPosition } = await loadChatMessages(
+      const { messages, nextPosition } = await loadChatHistory(
         dependencies.database,
         chatId,
         user.id,
@@ -287,13 +356,13 @@ export function createChatHandlers(
         content: request.text,
       };
 
-      const model = dependencies.createModel();
-      await appendMessage(
+      const userMessageId = await appendMessage(
         dependencies.database,
         chatId,
         nextPosition,
         userMessage,
       );
+      const model = dependencies.createModel();
 
       const result = dependencies.streamText({
         model,
@@ -306,14 +375,22 @@ export function createChatHandlers(
         async (stream) => {
           let assistantText = "";
           let finishReason = "stop";
+          let reasoningDurationSeconds: number | null = null;
+          let hasSeenTextDelta = false;
 
           try {
             await writeEvent(stream, { type: "start", sessionId: chatId });
+            const reasoningStartedAt = dependencies.now();
             await writeEvent(stream, { type: "status", status: "thinking" });
 
             for await (const part of result.fullStream) {
               switch (part.type) {
                 case "text-delta":
+                  if (!hasSeenTextDelta) {
+                    reasoningDurationSeconds =
+                      (dependencies.now() - reasoningStartedAt) / 1000;
+                    hasSeenTextDelta = true;
+                  }
                   assistantText += part.text;
                   await writeEvent(stream, {
                     type: "text-delta",
@@ -352,11 +429,24 @@ export function createChatHandlers(
               role: "assistant",
               content: assistantText,
             };
-            await appendMessage(
+            const assistantMessageId = await appendMessage(
               dependencies.database,
               chatId,
               nextPosition + 1,
               assistantMessage,
+              reasoningDurationSeconds,
+            );
+
+            const messages: ChatMessage[] = [
+              toChatMessage(userMessageId, userMessage),
+              toChatMessage(
+                assistantMessageId,
+                assistantMessage,
+                reasoningDurationSeconds,
+              ),
+            ].filter(
+              (message): message is NonNullable<typeof message> =>
+                message !== null,
             );
 
             await writeEvent(stream, { type: "status", status: "complete" });
@@ -364,6 +454,7 @@ export function createChatHandlers(
               type: "end",
               sessionId: chatId,
               finishReason,
+              messages,
             });
           } catch (error) {
             console.error("Chat stream failed", error);
@@ -384,9 +475,9 @@ export function createChatHandlers(
     }
   }
 
-  return { createChat, streamChat };
+  return { createChat, getChat, listChats, streamChat };
 }
 
 const defaultChatHandlers = createChatHandlers();
 
-export const { createChat, streamChat } = defaultChatHandlers;
+export const { createChat, getChat, listChats, streamChat } = defaultChatHandlers;

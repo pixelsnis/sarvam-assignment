@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import {
   boolean,
+  doublePrecision,
   index,
   integer,
   pgTable,
@@ -106,6 +107,7 @@ export const chatMessage = pgTable(
       .references(() => chat.id, { onDelete: "cascade" }),
     position: integer("position").notNull(),
     message: text("message").notNull(),
+    reasoningDurationSeconds: doublePrecision("reasoning_duration_seconds"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [

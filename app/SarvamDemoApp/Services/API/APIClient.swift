@@ -12,6 +12,7 @@ final class APIClient {
   static let shared = APIClient()
   static var account: Account { shared.accountAPI }
   static var auth: Auth { shared.authAPI }
+  static var chat: Chat { shared.chatAPI }
 
   let configuration: Configuration
   let session: URLSession
@@ -19,6 +20,7 @@ final class APIClient {
   let encoder: JSONEncoder
   lazy var accountAPI = Account(client: self)
   lazy var authAPI = Auth(client: self)
+  lazy var chatAPI = Chat(client: self)
 
   init(configuration: Configuration = .default, session: URLSession? = nil) {
     self.configuration = configuration

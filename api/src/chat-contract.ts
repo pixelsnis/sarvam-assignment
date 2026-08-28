@@ -12,6 +12,30 @@ export const chatRequestSchema = z
 
 export type ChatRequest = z.infer<typeof chatRequestSchema>;
 
+export type ChatMessage =
+  | {
+      id: string;
+      role: "user";
+      text: string;
+    }
+  | {
+      id: string;
+      role: "assistant";
+      text: string;
+      reasoningDurationSeconds: number | null;
+    };
+
+export type ChatResponse = {
+  id: string;
+  messages: ChatMessage[];
+};
+
+export type ChatSummary = {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export type ChatStreamEvent =
   | { type: "start"; sessionId: string }
   | {
@@ -21,7 +45,12 @@ export type ChatStreamEvent =
   | { type: "tool-call"; toolId: string; toolName: string; label: string }
   | { type: "tool-result"; toolId: string; toolName: string; label: string }
   | { type: "text-delta"; text: string }
-  | { type: "end"; sessionId: string; finishReason: string };
+  | {
+      type: "end";
+      sessionId: string;
+      finishReason: string;
+      messages: ChatMessage[];
+    };
 
 const toolLabels: Record<string, string> = {
   read_file: "Reading files",
@@ -49,6 +78,39 @@ export function getToolLabel(toolName: string): string {
         : normalizedWord;
     })
     .join(" ");
+}
+
+function plainTextFromMessage(message: ModelMessage): string {
+  if (typeof message.content === "string") {
+    return message.content;
+  }
+
+  return message.content
+    .filter((part) => part.type === "text")
+    .map((part) => part.text)
+    .join("");
+}
+
+export function toChatMessage(
+  id: string,
+  message: ModelMessage,
+  reasoningDurationSeconds: number | null = null,
+): ChatMessage | null {
+  const text = plainTextFromMessage(message);
+
+  switch (message.role) {
+    case "user":
+      return { id, role: "user", text };
+    case "assistant":
+      return {
+        id,
+        role: "assistant",
+        text,
+        reasoningDurationSeconds,
+      };
+    default:
+      return null;
+  }
 }
 
 export function decodeStoredMessages(

@@ -7,16 +7,24 @@ import {
 } from "./chat";
 
 type StoredMessage = {
+  id?: string;
   message: string;
   position: number;
+  reasoningDurationSeconds?: number | null;
+};
+
+type StoredChat = {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 type FakeDatabase = {
-  select: () => {
+  select: (selection?: Record<string, unknown>) => {
     from: () => {
       where: () => {
         limit: () => Promise<Array<{ id: string }>>;
-        orderBy: () => Promise<StoredMessage[]>;
+        orderBy: () => Promise<StoredMessage[] | StoredChat[]>;
       };
     };
   };
@@ -48,29 +56,42 @@ function makeStreamResult(parts: object[]) {
 function makeDependencies(options?: {
   authenticated?: boolean;
   chatExists?: boolean;
+  chats?: StoredChat[];
   storedMessages?: StoredMessage[];
   streamParts?: object[];
+  now?: () => number;
 }) {
   const insertedChats: Array<{ id: string; userId: string }> = [];
   const insertedMessages: Array<{
+    id: string;
     chatId: string;
     message: string;
     position: number;
+    reasoningDurationSeconds: number | null;
   }> = [];
   let streamOptions:
     | { instructions: string; messages: Array<unknown> }
     | undefined;
 
-  const storedMessages = options?.storedMessages ?? [];
+  const storedMessages = (options?.storedMessages ?? []).map(
+    (message, index) => ({
+      id: message.id ?? `stored-message-${index}`,
+      message: message.message,
+      position: message.position,
+      reasoningDurationSeconds: message.reasoningDurationSeconds ?? null,
+    }),
+  );
+  const chats = options?.chats ?? [];
   const chatExists = options?.chatExists ?? true;
 
   const database = {} as FakeDatabase;
 
-  database.select = () => ({
+  database.select = (selection = {}) => ({
     from: () => ({
       where: () => ({
         limit: async () => (chatExists ? [{ id: "chat-1" }] : []),
-        orderBy: async () => storedMessages,
+        orderBy: async () =>
+          "createdAt" in selection ? chats : storedMessages,
       }),
     }),
   });
@@ -79,9 +100,13 @@ function makeDependencies(options?: {
       values: async (values: Record<string, unknown>) => {
         if (typeof values.message === "string") {
           insertedMessages.push({
+            id: values.id as string,
             chatId: values.chatId as string,
             message: values.message,
             position: values.position as number,
+            reasoningDurationSeconds: values.reasoningDurationSeconds as
+              | number
+              | null,
           });
         } else {
           insertedChats.push({
@@ -110,6 +135,7 @@ function makeDependencies(options?: {
         ? null
         : { user: { id: "user-1" } },
     createModel: () => ({}) as LanguageModel,
+    now: options?.now ?? (() => 0),
     streamText: ({ instructions, messages }) => {
       streamOptions = { instructions, messages };
       return makeStreamResult(
@@ -137,6 +163,8 @@ function makeApp(dependencies: ChatDependencies) {
   const handlers = createChatHandlers(dependencies);
 
   app.post("/chats/new", handlers.createChat);
+  app.get("/chats", handlers.listChats);
+  app.get("/chats/:id", handlers.getChat);
   app.post("/chats/:id/stream", handlers.streamChat);
 
   return app;
@@ -151,6 +179,49 @@ async function readEvents(response: Response): Promise<Array<Record<string, unkn
 }
 
 describe("chat routes", () => {
+  test("lists authenticated chats by most recently updated", async () => {
+    const chats = [
+      {
+        id: "chat-2",
+        createdAt: new Date("2026-08-28T10:00:00.000Z"),
+        updatedAt: new Date("2026-08-28T10:02:00.000Z"),
+      },
+      {
+        id: "chat-1",
+        createdAt: new Date("2026-08-28T09:00:00.000Z"),
+        updatedAt: new Date("2026-08-28T09:01:00.000Z"),
+      },
+    ];
+    const state = makeDependencies({ chats });
+    const response = await makeApp(state.dependencies).request("/chats", {
+      method: "GET",
+    });
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual([
+      {
+        id: "chat-2",
+        createdAt: "2026-08-28T10:00:00.000Z",
+        updatedAt: "2026-08-28T10:02:00.000Z",
+      },
+      {
+        id: "chat-1",
+        createdAt: "2026-08-28T09:00:00.000Z",
+        updatedAt: "2026-08-28T09:01:00.000Z",
+      },
+    ]);
+  });
+
+  test("protects the chat list with authentication", async () => {
+    const state = makeDependencies({ authenticated: false });
+    const response = await makeApp(state.dependencies).request("/chats", {
+      method: "GET",
+    });
+
+    expect(response.status).toBe(401);
+    expect(await response.json()).toMatchObject({ code: "unauthorized" });
+  });
+
   test("creates an authenticated chat", async () => {
     const state = makeDependencies();
     const response = await makeApp(state.dependencies).request("/chats/new", {
@@ -160,6 +231,82 @@ describe("chat routes", () => {
     expect(response.status).toBe(201);
     expect(await response.json()).toEqual({ id: state.insertedChats[0]?.id });
     expect(state.insertedChats[0]?.userId).toBe("user-1");
+  });
+
+  test("gets an ordered flattened transcript", async () => {
+    const state = makeDependencies({
+      storedMessages: [
+        {
+          id: "user-message",
+          position: 0,
+          message: JSON.stringify({ role: "user", content: "Hello" }),
+        },
+        {
+          id: "assistant-message",
+          position: 1,
+          reasoningDurationSeconds: 1.5,
+          message: JSON.stringify({
+            role: "assistant",
+            content: [
+              { type: "reasoning", text: "Hidden reasoning" },
+              { type: "text", text: "Hi" },
+              { type: "text", text: " there" },
+            ],
+          }),
+        },
+      ],
+    });
+    const response = await makeApp(state.dependencies).request(
+      "/chats/chat-1",
+      { method: "GET" },
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      id: "chat-1",
+      messages: [
+        {
+          id: "user-message",
+          role: "user",
+          text: "Hello",
+        },
+        {
+          id: "assistant-message",
+          role: "assistant",
+          text: "Hi there",
+          reasoningDurationSeconds: 1.5,
+        },
+      ],
+    });
+  });
+
+  test("protects GET transcripts with authentication and ownership checks", async () => {
+    const unauthenticated = makeDependencies({ authenticated: false });
+    const unauthenticatedResponse = await makeApp(
+      unauthenticated.dependencies,
+    ).request("/chats/chat-1", { method: "GET" });
+    expect(unauthenticatedResponse.status).toBe(401);
+
+    const inaccessible = makeDependencies({ chatExists: false });
+    const inaccessibleResponse = await makeApp(
+      inaccessible.dependencies,
+    ).request("/chats/chat-1", { method: "GET" });
+    expect(inaccessibleResponse.status).toBe(404);
+  });
+
+  test("rejects invalid persisted history on GET", async () => {
+    const state = makeDependencies({
+      storedMessages: [{ position: 0, message: "not json" }],
+    });
+    const response = await makeApp(state.dependencies).request(
+      "/chats/chat-1",
+      { method: "GET" },
+    );
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toMatchObject({
+      code: "invalid_chat_history",
+    });
   });
 
   test("streams ordered history and persists the completed assistant turn", async () => {
@@ -190,6 +337,10 @@ describe("chat routes", () => {
         { type: "text-delta", text: " there" },
         { type: "finish", finishReason: "stop" },
       ],
+      now: (() => {
+        const values = [10_000, 11_250];
+        return () => values.shift() ?? 11_250;
+      })(),
     });
     const response = await makeApp(state.dependencies).request(
       "/chats/chat-1/stream",
@@ -238,6 +389,19 @@ describe("chat routes", () => {
       type: "end",
       sessionId: "chat-1",
       finishReason: "stop",
+      messages: [
+        {
+          id: state.insertedMessages[0]?.id,
+          role: "user",
+          text: "Current question",
+        },
+        {
+          id: state.insertedMessages[1]?.id,
+          role: "assistant",
+          text: "Hello there",
+          reasoningDurationSeconds: 1.25,
+        },
+      ],
     });
 
     expect(state.insertedMessages).toHaveLength(2);
@@ -249,6 +413,7 @@ describe("chat routes", () => {
       role: "assistant",
       content: "Hello there",
     });
+    expect(state.insertedMessages[1]!.reasoningDurationSeconds).toBe(1.25);
     expect(state.insertedMessages.map((message) => message.position)).toEqual([
       1,
       2,
@@ -285,6 +450,38 @@ describe("chat routes", () => {
       role: "user",
       content: "Try this",
     });
+  });
+
+  test("returns a null reasoning duration when no text delta is emitted", async () => {
+    const state = makeDependencies({
+      streamParts: [{ type: "start" }, { type: "finish", finishReason: "stop" }],
+      now: (() => {
+        const values = [2_000];
+        return () => values.shift() ?? 2_000;
+      })(),
+    });
+    const response = await makeApp(state.dependencies).request(
+      "/chats/chat-1/stream",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: "No text" }),
+      },
+    );
+
+    const events = await readEvents(response);
+    expect(events.at(-1)).toMatchObject({
+      type: "end",
+      messages: [
+        { role: "user", text: "No text" },
+        {
+          role: "assistant",
+          text: "",
+          reasoningDurationSeconds: null,
+        },
+      ],
+    });
+    expect(state.insertedMessages[1]?.reasoningDurationSeconds).toBeNull();
   });
 
   test("rejects invalid persisted history before accepting a new turn", async () => {

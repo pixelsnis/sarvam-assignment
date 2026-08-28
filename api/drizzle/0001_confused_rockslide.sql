@@ -10,6 +10,7 @@ CREATE TABLE "chat_message" (
 	"chat_id" text NOT NULL,
 	"position" integer NOT NULL,
 	"message" text NOT NULL,
+	"reasoning_duration_seconds" double precision,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint

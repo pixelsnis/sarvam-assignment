@@ -4,6 +4,7 @@ import {
   decodeStoredMessages,
   getToolLabel,
   InvalidChatHistoryError,
+  toChatMessage,
 } from "./chat-contract";
 
 describe("chat request contract", () => {
@@ -40,6 +41,29 @@ describe("stored chat history", () => {
     expect(() =>
       decodeStoredMessages([JSON.stringify({ role: "user" })]),
     ).toThrow(InvalidChatHistoryError);
+  });
+
+  test("flattens only user and assistant text content", () => {
+    expect(
+      toChatMessage("assistant-1", {
+        role: "assistant",
+        content: [
+          { type: "reasoning", text: "Hidden reasoning" },
+          { type: "text", text: "Visible" },
+        ],
+      }),
+    ).toEqual({
+      id: "assistant-1",
+      role: "assistant",
+      text: "Visible",
+      reasoningDurationSeconds: null,
+    });
+    expect(
+      toChatMessage("tool-1", {
+        role: "tool",
+        content: [],
+      }),
+    ).toBeNull();
   });
 });
 
