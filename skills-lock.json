@@ -7,6 +7,12 @@
       "skillPath": "skills/use-ai-sdk/SKILL.md",
       "computedHash": "0883204d11b055e968dee697c5858e68064c27dfd4deb6310212895daa65c5ad"
     },
+    "avkit": {
+      "source": "dpearson2699/swift-ios-skills",
+      "sourceType": "github",
+      "skillPath": "skills/avkit/SKILL.md",
+      "computedHash": "e040830cb39cf33195847476d6dc1538bc931b65711f4765ac6f96564b1145ef"
+    },
     "swift-api-design-guidelines": {
       "source": "dpearson2699/swift-ios-skills",
       "sourceType": "github",
