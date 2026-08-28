@@ -34,14 +34,15 @@ extension APIClient {
       print("[App:ChatAPI] Starting stream")
       return AsyncThrowingStream { continuation in
         let body = StreamRequest(content: content)
-        let request: URLRequest
+        var request: URLRequest
         do {
           request = try client.makeRequest(path: "chats/\(id)/stream", method: .post, body: try client.encode(body))
         } catch { continuation.finish(throwing: error); return }
+        request.setValue("application/x-ndjson", forHTTPHeaderField: "Accept")
 
         var pending = Data()
         let dataRequest = session.streamRequest(request)
-          .validate()
+          .validate(statusCode: 200..<300)
           .responseStreamString { stream in
             switch stream.event {
             case .stream(let result):

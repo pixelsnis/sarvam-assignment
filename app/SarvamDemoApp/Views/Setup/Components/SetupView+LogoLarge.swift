@@ -9,6 +9,8 @@ import SwiftUI
 
 extension SetupView {
   struct LogoLarge: View {
+    let namespace: Namespace.ID
+
     var body: some View {
       Group {
         Spacer()
@@ -17,6 +19,7 @@ extension SetupView {
           .resizable()
           .scaledToFit()
           .frame(height: 100)
+          .matchedGeometryEffect(id: "setup-logo", in: namespace)
         
         Spacer()
         
@@ -27,7 +30,9 @@ extension SetupView {
 }
 
 #Preview {
+  @Previewable @Namespace var namespace
+
   VStack {
-    SetupView.LogoLarge()
+    SetupView.LogoLarge(namespace: namespace)
   }
 }

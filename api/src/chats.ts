@@ -9,6 +9,18 @@ import { chat, chatMessage } from "./db/schema";
 
 const CHAT_MODEL = "sarvam-105b";
 
+type ChatProviderEnvironment = {
+  CHAT_BASE_URL?: string;
+  CHAT_API_KEY?: string;
+  OPENAI_BASE_URL?: string;
+  OPENAI_API_KEY?: string;
+};
+
+export type ChatProviderConfig = {
+  baseURL: string;
+  apiKey: string;
+};
+
 export type ChatContentPart =
   | { type: "text"; text: string }
   | { type: "reasoning"; reasoning: string; duration: number }
@@ -99,6 +111,16 @@ export function toolLabel(toolName: string, completed: boolean): string {
   return completed ? `Used ${words}` : `Using ${words}`;
 }
 
+export function chatProviderConfig(
+  environment?: ChatProviderEnvironment,
+): ChatProviderConfig | null {
+  const values = environment ?? process.env;
+  const baseURL = values.CHAT_BASE_URL || values.OPENAI_BASE_URL;
+  const apiKey = values.CHAT_API_KEY || values.OPENAI_API_KEY;
+  if (!baseURL || !apiKey) return null;
+  return { baseURL, apiKey };
+}
+
 export function createChatHandler() {
   return async (c: Context): Promise<Response> => {
     try {
@@ -171,9 +193,12 @@ export function streamChatHandler() {
       if (!prompt) {
         throw new ChatHttpError(400, "invalid_request", "Content must not be empty.");
       }
-      const baseURL = process.env.CHAT_BASE_URL;
-      const apiKey = process.env.CHAT_API_KEY;
-      if (!baseURL || !apiKey) {
+      const providerConfig = chatProviderConfig();
+      if (!providerConfig) {
+        console.error(
+          "[API:Chat] Chat provider is not configured; set CHAT_BASE_URL/CHAT_API_KEY " +
+            "or OPENAI_BASE_URL/OPENAI_API_KEY",
+        );
         throw new ChatHttpError(500, "configuration_error", "Chat provider is not configured.");
       }
 
@@ -195,7 +220,11 @@ export function streamChatHandler() {
       if (!userRow) throw new Error("Message insert returned no row");
 
       const assistantId = crypto.randomUUID();
-      const provider = createOpenAICompatible({ name: "sarvam", baseURL, apiKey });
+      const provider = createOpenAICompatible({
+        name: "sarvam",
+        baseURL: providerConfig.baseURL,
+        apiKey: providerConfig.apiKey,
+      });
       const result = streamText({
         model: provider(CHAT_MODEL),
         messages: [

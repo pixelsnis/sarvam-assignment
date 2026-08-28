@@ -28,7 +28,10 @@ final class AudioRecorder {
     }
   }
 
-  private static let waveformIntervalNanoseconds: UInt64 = 200_000_000
+  private static let waveformIntervalNanoseconds: UInt64 = 100_000_000
+  private static let waveformNoiseFloorDB: Float = -50
+  private static let waveformCeilingDB: Float = -10
+  private static let waveformPeakAdjustmentDB: Float = 12
 
   private let audioSession: AVAudioSession
   private let fileManager: FileManager
@@ -191,7 +194,16 @@ final class AudioRecorder {
 
     recorder.updateMeters()
     let averagePower = recorder.averagePower(forChannel: 0)
-    let amplitude = pow(10, averagePower / 20)
-    waveformSamples.append(min(max(amplitude, 0), 1))
+    let peakPower = recorder.peakPower(forChannel: 0)
+
+    // AVAudioRecorder reports dBFS. Converting that directly to linear
+    // amplitude makes normal speech (often around -30 dBFS) nearly invisible
+    // in a small UI waveform. Normalize the meter into a display range and
+    // let recent peaks contribute without allowing them to dominate noise.
+    let displayPower = max(averagePower, peakPower - Self.waveformPeakAdjustmentDB)
+    let normalizedPower = (displayPower - Self.waveformNoiseFloorDB) /
+      (Self.waveformCeilingDB - Self.waveformNoiseFloorDB)
+    let amplitude = sqrt(min(max(normalizedPower, 0), 1))
+    waveformSamples.append(amplitude)
   }
 }

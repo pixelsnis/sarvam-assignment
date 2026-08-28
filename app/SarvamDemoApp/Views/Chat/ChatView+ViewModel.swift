@@ -117,12 +117,12 @@ extension ChatView {
         }
       }
       text = ""
+      submissionState = chatID == nil ? .creatingChat : .streaming
       let task = Task { [weak self] in
         guard let self else { return }
         await self.performSubmission(prompt)
       }
       submissionTask = task
-      await task.value
     }
 
     private func performSubmission(_ prompt: String) async {
