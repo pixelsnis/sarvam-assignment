@@ -56,9 +56,11 @@ struct PromptBarActionButton: View {
     guard !loading.wrappedValue, isEnabled else { return }
     
     Task {
+      print("[App:PromptButton] Action started")
       loading.wrappedValue = true
       defer { loading.wrappedValue = false }
       await action()
+      print("[App:PromptButton] Action finished")
     }
   }
 
@@ -81,6 +83,6 @@ struct PromptBarActionButton: View {
 
 #Preview {
   PromptBarActionButton("Send", systemImage: "arrow.right", loading: .constant(false)) {
-    print("Test")
+    print("[Preview:PromptButton] Action invoked")
   }
 }

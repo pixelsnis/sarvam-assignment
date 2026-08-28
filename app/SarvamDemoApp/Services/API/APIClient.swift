@@ -5,9 +5,13 @@ nonisolated final class APIClient {
   struct Configuration {
     let baseURL: URL
 
-    static let `default` = Configuration(
-      baseURL: URL(string: "http://localhost:3000")!
-    )
+    static var `default`: Configuration {
+      let savedURL = UserDefaults.standard.string(forKey: "apiBaseURL")
+        .flatMap(URL.init(string:))
+      return Configuration(
+        baseURL: savedURL ?? URL(string: "http://localhost:3000")!
+      )
+    }
   }
 
   static let shared = APIClient()
@@ -15,7 +19,7 @@ nonisolated final class APIClient {
   static var auth: Auth { shared.authAPI }
   static var transcriptions: Transcriptions { shared.transcriptionsAPI }
 
-  let configuration: Configuration
+  private(set) var configuration: Configuration
   let session: URLSession
   let decoder: JSONDecoder
   let encoder: JSONEncoder
@@ -25,6 +29,7 @@ nonisolated final class APIClient {
   lazy var chatsAPI = Chats(client: self)
 
   init(configuration: Configuration = .default, session: URLSession? = nil) {
+    print("[App:API] Client initialized")
     self.configuration = configuration
 
     let decoder = JSONDecoder()
@@ -63,6 +68,12 @@ nonisolated final class APIClient {
       self.session = URLSession(configuration: sessionConfiguration)
     }
 
+  }
+
+  func updateBaseURL(_ baseURL: URL) {
+    print("[App:API] Base URL discovered")
+    configuration = Configuration(baseURL: baseURL)
+    UserDefaults.standard.set(baseURL.absoluteString, forKey: "apiBaseURL")
   }
 
   final class Account {

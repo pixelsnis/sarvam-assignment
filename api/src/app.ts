@@ -10,6 +10,11 @@ import {
 
 const app = new Hono();
 
+app.use("*", async (c, next) => {
+  console.log(`[API] ${c.req.method} ${new URL(c.req.url).pathname}`);
+  await next();
+});
+
 app.get("/health", (c) => c.json({ status: "ok" }));
 
 app.post("/transcriptions", createTranscriptionHandler());

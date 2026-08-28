@@ -2,6 +2,7 @@ import UIKit
 
 extension Auth {
   func start() {
+    print("[App:Auth] Lifecycle started")
     guard lifecycleTask == nil else { return }
 
     lifecycleTask = Task { [weak self] in
@@ -19,6 +20,7 @@ extension Auth {
   }
 
   func stop() {
+    print("[App:Auth] Lifecycle stopped")
     lifecycleTask?.cancel()
     lifecycleTask = nil
   }

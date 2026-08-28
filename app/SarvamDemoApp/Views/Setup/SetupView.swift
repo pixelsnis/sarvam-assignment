@@ -2,19 +2,23 @@ import SwiftUI
 
 struct SetupView: View {
   @State private var vm = ViewModel()
-  
+
   private var showAllActions: Bool {
     !vm.inputFieldFocused && vm.emailOrPhone.isEmpty
   }
-  
+
   var body: some View {
     VStack(spacing: 16) {
+      if vm.stage != .intro {
+        Spacer()
+      }
+
       if vm.stage == .intro {
         Self.LogoLarge()
       } else {
         Self.StepDetail()
       }
-      
+
       if showAllActions {
         VStack(spacing: 16) {
           Self.SocialSignOnActions()
@@ -25,16 +29,22 @@ struct SetupView: View {
         }
         .transition(.blurReplace)
       }
-      
+
       Self.InputField()
 
-      Text("By signing up, you agree to the\n[Terms of Service](https://www.sarvam.ai/terms-of-service) and [Privacy Policy](https://www.sarvam.ai/privacy-policy).")
+      if vm.stage == .intro {
+        Text(
+          "By signing up, you agree to the\n[Terms of Service](https://www.sarvam.ai/terms-of-service) and [Privacy Policy](https://www.sarvam.ai/privacy-policy)."
+        )
         .font(.subheadline)
         .multilineTextAlignment(.center)
         .tint(.primary)
         .foregroundStyle(.secondary)
+        .transition(.blurReplace)
+      }
     }
     .animation(.default, value: showAllActions)
+    .animation(.default, value: vm.stage)
     .scrollDismissesKeyboard(.interactively)
     .padding()
     .toolbar {

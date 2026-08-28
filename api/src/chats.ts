@@ -53,7 +53,7 @@ function errorResponse(c: Context, error: unknown): Response {
     error instanceof ChatHttpError
       ? error
       : new ChatHttpError(500, "internal_error", "The chat request failed.");
-  if (!(error instanceof ChatHttpError)) console.error("Chat request failed", error);
+  if (!(error instanceof ChatHttpError)) console.error("[API:Chat] Request failed", error);
   return c.json(
     { code: value.code, message: value.message },
     value.status as ContentfulStatusCode,
@@ -61,6 +61,7 @@ function errorResponse(c: Context, error: unknown): Response {
 }
 
 async function authenticatedUser(c: Context): Promise<Session["user"]> {
+  console.log("[API:Chat] Checking session");
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
   if (!session) {
     throw new ChatHttpError(401, "unauthorized", "You must be signed in.");
@@ -101,9 +102,11 @@ export function toolLabel(toolName: string, completed: boolean): string {
 export function createChatHandler() {
   return async (c: Context): Promise<Response> => {
     try {
+      console.log("[API:Chat] Creating chat");
       const user = await authenticatedUser(c);
       const [created] = await db.insert(chat).values({ userId: user.id }).returning();
       if (!created) throw new Error("Chat insert returned no row");
+      console.log("[API:Chat] Chat created");
       return c.json({ id: created.id }, 201);
     } catch (error) {
       return errorResponse(c, error);
@@ -114,6 +117,7 @@ export function createChatHandler() {
 export function listChatsHandler() {
   return async (c: Context): Promise<Response> => {
     try {
+      console.log("[API:Chat] Listing chats");
       const user = await authenticatedUser(c);
       const chats = await db
         .select({ id: chat.id, createdAt: chat.createdAt, updatedAt: chat.updatedAt })
@@ -130,6 +134,7 @@ export function listChatsHandler() {
 export function getChatHandler() {
   return async (c: Context): Promise<Response> => {
     try {
+      console.log("[API:Chat] Loading chat");
       const user = await authenticatedUser(c);
       const value = await ownedChat(c.req.param("id"), user.id);
       const rows = await db
@@ -156,6 +161,7 @@ function ndjson(chunk: ChatStreamChunk): Uint8Array {
 export function streamChatHandler() {
   return async (c: Context): Promise<Response> => {
     try {
+      console.log("[API:Chat] Starting stream");
       const user = await authenticatedUser(c);
       const value = await ownedChat(c.req.param("id"), user.id);
       const body: { content?: unknown } = await c.req
@@ -198,6 +204,7 @@ export function streamChatHandler() {
         ],
         abortSignal: c.req.raw.signal,
       });
+      console.log("[API:Chat] Provider stream started");
 
       const stream = new ReadableStream<Uint8Array>({
         async start(controller) {
@@ -326,7 +333,7 @@ export function streamChatHandler() {
               }),
             );
           } catch (error) {
-            console.error("Chat stream failed", error);
+            console.error("[API:Chat] Stream failed", error);
             controller.enqueue(
               ndjson({
                 type: "end",
@@ -335,6 +342,7 @@ export function streamChatHandler() {
                 error: { code: "stream_error", message: "The response could not be completed." },
               }),
             );
+            console.log("[API:Chat] Stream completed");
           } finally {
             controller.close();
           }

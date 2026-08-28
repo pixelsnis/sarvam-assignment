@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_sarvam-api._tcp</string>
+	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Find the Sarvam API server on your local network.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Microphone access is required to record audio.</string>
 	<key>NSAppTransportSecurity</key>

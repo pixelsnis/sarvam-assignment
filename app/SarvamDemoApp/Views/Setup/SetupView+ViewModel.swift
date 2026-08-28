@@ -89,6 +89,7 @@ extension SetupView {
     }
 
     func submitEmail() async {
+      print("[App:SetupVM] Submitting email")
       guard let email = normalizedEmail else { return }
 
       await runLoading {
@@ -99,12 +100,14 @@ extension SetupView {
           stage = .otpInput
           startResendCooldown()
         } catch {
+          print("[App:SetupVM] Email submission failed")
           self.error = error.localizedDescription
         }
       }
     }
 
     func resendOTP() async {
+      print("[App:SetupVM] Resending OTP")
       guard let email = normalizedEmail, resendSecondsRemaining == 0, !isLoading else { return }
 
       await runLoading {
@@ -114,6 +117,7 @@ extension SetupView {
           otp = ""
           startResendCooldown()
         } catch {
+          print("[App:SetupVM] OTP resend failed")
           self.error = error.localizedDescription
         }
       }
@@ -128,6 +132,7 @@ extension SetupView {
     }
 
     func verifyOTP() async {
+      print("[App:SetupVM] Verifying OTP")
       guard let email = normalizedEmail, otp.count == 6, !isLoading else { return }
 
       await runLoading {
@@ -143,12 +148,14 @@ extension SetupView {
         } catch let apiError as APIClient.APIError where apiError.statusCode == 400 {
           showInvalidOTP()
         } catch {
+          print("[App:SetupVM] OTP verification failed")
           self.error = error.localizedDescription
         }
       }
     }
 
     func submitName() async {
+      print("[App:SetupVM] Submitting name")
       guard isNameValid else {
         error = "Alphabets and accents only."
         return
@@ -160,12 +167,14 @@ extension SetupView {
           error = nil
           auth.markLoggedIn()
         } catch {
+          print("[App:SetupVM] Name submission failed")
           self.error = error.localizedDescription
         }
       }
     }
 
     func goBack() {
+      print("[App:SetupVM] Navigating back")
       switch stage {
       case .intro:
         break

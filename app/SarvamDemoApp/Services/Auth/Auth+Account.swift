@@ -2,6 +2,7 @@ import Foundation
 
 extension Auth {
   func requestOTP(email: String) async throws {
+    print("[App:Auth] Requesting OTP")
     setLoading(true)
     defer { setLoading(false) }
 
@@ -15,6 +16,7 @@ extension Auth {
   }
 
   func resendOTP(email: String) async throws {
+    print("[App:Auth] Resending OTP")
     setLoading(true)
     defer { setLoading(false) }
 
@@ -31,6 +33,7 @@ extension Auth {
     email: String,
     otp: String
   ) async throws {
+    print("[App:Auth] Verifying OTP")
     setLoading(true)
     defer { setLoading(false) }
 
@@ -51,6 +54,7 @@ extension Auth {
   }
 
   func updateUser(name: String) async throws {
+    print("[App:Auth] Updating user")
     setLoading(true)
     defer { setLoading(false) }
 

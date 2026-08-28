@@ -14,21 +14,25 @@ extension APIClient {
     }
 
     func create() async throws -> String {
+      print("[App:ChatAPI] Creating chat")
       let response: CreateResponse = try await client.perform(path: "chats/new", method: .post)
       return response.id
     }
 
     func list() async throws -> [ChatSummary] {
+      print("[App:ChatAPI] Listing chats")
       let response: ListResponse = try await client.perform(path: "chats/list", method: .get)
       return response.chats
     }
 
     func get(id: String) async throws -> Chat {
-      try await client.perform(path: "chats/\(id)", method: .get)
+      print("[App:ChatAPI] Loading chat")
+      return try await client.perform(path: "chats/\(id)", method: .get)
     }
 
     func stream(id: String, content: String) -> AsyncThrowingStream<ChatStreamChunk, Error> {
-      AsyncThrowingStream { continuation in
+      print("[App:ChatAPI] Starting stream")
+      return AsyncThrowingStream { continuation in
         let body = StreamRequest(content: content)
         let request: URLRequest
         do {

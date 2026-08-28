@@ -26,6 +26,7 @@ final class Auth {
   }
 
   func apply(_ authSession: APIClient.AuthSession?) {
+    print("[App:Auth] Applying session state")
     guard let authSession else {
       status = .unauthenticated
       user = nil
@@ -43,6 +44,7 @@ final class Auth {
   }
 
   func record(error: Error) {
+    print("[App:Auth] Error recorded")
     errorMessage = error.localizedDescription
   }
 

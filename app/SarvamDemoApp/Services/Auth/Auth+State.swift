@@ -16,10 +16,12 @@ extension Auth {
   }
 
   func markLoggedIn() {
+    print("[App:Auth] User marked logged in")
     UserDefaults.standard.set(true, forKey: "isLoggedIn")
   }
 
   func markLoggedOut() {
+    print("[App:Auth] User marked logged out")
     UserDefaults.standard.set(false, forKey: "isLoggedIn")
   }
 }

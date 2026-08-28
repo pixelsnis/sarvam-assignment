@@ -16,12 +16,22 @@ if (!secret) {
 export const auth = betterAuth({
   secret,
   baseURL: process.env.BETTER_AUTH_URL,
+  // The Hono adapter mounts Better Auth at /auth/* and the iOS client uses
+  // the same prefix. Better Auth defaults to /api/auth, so keep its router
+  // base path aligned with the public route.
+  basePath: "/auth",
+  trustedOrigins: [
+    process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
+    "http://*.local:3000",
+    "http://*.local.:3000",
+  ],
   database: drizzleAdapter(db, {
     provider: "pg",
   }),
   plugins: [
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
+        console.log(`[API:Auth] Sending ${type} OTP`);
         if (type !== "sign-in") {
           throw new Error(`Unsupported email OTP type: ${type}`);
         }
@@ -48,6 +58,7 @@ export const auth = betterAuth({
         if (!data?.id) {
           throw new Error("Resend did not return an email id");
         }
+        console.log("[API:Auth] OTP email sent");
       },
     }),
   ],

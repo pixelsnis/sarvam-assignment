@@ -2,6 +2,7 @@ import Foundation
 
 extension APIClient.Account {
   func sendOTP(email: String) async throws {
+    print("[App:AccountAPI] Sending OTP")
     let payload = try client.encode(APIClient.EmailOTPRequest(
       email: email,
       type: "sign-in"

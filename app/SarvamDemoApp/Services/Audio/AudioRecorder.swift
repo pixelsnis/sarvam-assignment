@@ -58,7 +58,8 @@ final class AudioRecorder {
   }
 
   func requestPermission() async -> Bool {
-    switch AVAudioApplication.shared.recordPermission {
+    print("[App:Audio] Checking microphone permission")
+    return switch AVAudioApplication.shared.recordPermission {
     case .granted:
       true
     case .denied:
@@ -75,6 +76,7 @@ final class AudioRecorder {
   }
 
   func start() async throws {
+    print("[App:Audio] Recording started")
     guard !isRecording else {
       throw Error.alreadyRecording
     }
@@ -132,6 +134,7 @@ final class AudioRecorder {
 
   @discardableResult
   func stop() -> URL? {
+    print("[App:Audio] Recording stopped")
     waveformTask?.cancel()
     waveformTask = nil
 

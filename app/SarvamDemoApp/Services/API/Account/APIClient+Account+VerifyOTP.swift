@@ -11,6 +11,7 @@ extension APIClient.Account {
     email: String,
     otp: String
   ) async throws -> APIClient.User {
+    print("[App:AccountAPI] Verifying OTP")
     let payload = try client.encode(VerifyOTPPayload(
       email: email,
       otp: otp,

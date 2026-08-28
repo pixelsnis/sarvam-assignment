@@ -2,6 +2,7 @@ import Foundation
 
 extension Auth {
   func refreshSession() async {
+    print("[App:Auth] Refreshing session")
     guard !isRefreshing else { return }
 
     isRefreshing = true
@@ -23,6 +24,7 @@ extension Auth {
   }
 
   func signOut() async throws {
+    print("[App:Auth] Signing out")
     setLoading(true)
     defer { setLoading(false) }
 

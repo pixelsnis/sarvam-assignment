@@ -91,6 +91,7 @@ extension ChatView {
     }
 
     func submit() async {
+      print("[App:ChatVM] Submitting prompt")
       let prompt = text.trimmingCharacters(in: .whitespacesAndNewlines)
       guard !prompt.isEmpty, !submissionState.isBusy else { return }
 
@@ -125,6 +126,7 @@ extension ChatView {
     }
 
     private func performSubmission(_ prompt: String) async {
+      print("[App:ChatVM] Processing submission")
       defer { submissionTask = nil }
       do {
         if chatID == nil {
@@ -160,6 +162,7 @@ extension ChatView {
       } catch is CancellationError {
         return
       } catch {
+        print("[App:ChatVM] Submission failed")
         streamChunks = []
         streamingAssistantMessage = .init()
         text = prompt
@@ -169,11 +172,13 @@ extension ChatView {
     }
 
     func dismissError() {
+      print("[App:ChatVM] Dismissing error")
       errorMessage = nil
       if submissionState == .failed { submissionState = .idle }
     }
 
     func startNewChat() {
+      print("[App:ChatVM] Starting new chat")
       submissionTask?.cancel()
       submissionTask = nil
       cancelDictation()
@@ -190,6 +195,7 @@ extension ChatView {
     }
 
     func cancelSubmission() {
+      print("[App:ChatVM] Cancelling submission")
       submissionTask?.cancel()
       submissionTask = nil
       streamChunks = []
@@ -198,18 +204,21 @@ extension ChatView {
     }
 
     func startDictation() async {
+      print("[App:ChatVM] Starting dictation")
       guard dictationState == .idle else { return }
 
       do {
         try await audioRecorder.start()
         dictationState = .recording
       } catch {
+        print("[App:ChatVM] Transcription failed")
         errorMessage = error.localizedDescription
         dictationState = .idle
       }
     }
 
     func finishDictation() async {
+      print("[App:ChatVM] Finishing dictation")
       guard dictationState == .recording else { return }
       guard audioRecorder.stop() != nil else {
         dictationState = .idle
@@ -222,6 +231,7 @@ extension ChatView {
 
     /// Transcribes the most recent recording into the prompt text.
     func transcribe() async {
+      print("[App:ChatVM] Starting transcription")
       guard dictationState != .transcribing else { return }
       guard let fileURL = audioRecorder.fileURL() else {
         dictationState = .idle
@@ -244,6 +254,7 @@ extension ChatView {
     }
 
     func cancelDictation() {
+      print("[App:ChatVM] Cancelling dictation")
       dictationGeneration &+= 1
       transcriptionTask?.cancel()
       transcriptionTask = nil

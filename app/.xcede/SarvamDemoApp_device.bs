@@ -1,0 +1,1 @@
+{"fullProductName":"SarvamDemoApp.app","executablePath":"SarvamDemoApp.app\/SarvamDemoApp","builtProductsDir":"\/Users\/aneesh\/Library\/Developer\/Xcode\/DerivedData\/SarvamDemoApp-behjplgzhciyoaejqucbjcutspxk\/Build\/Products\/Debug-iphoneos"}

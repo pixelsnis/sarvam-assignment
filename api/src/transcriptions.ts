@@ -30,7 +30,7 @@ class TranscriptionHttpError extends Error {
 
 function errorResponse(c: Context, error: unknown): Response {
   if (!(error instanceof TranscriptionHttpError)) {
-    console.error("Transcription request failed", error);
+    console.error("[API:Transcription] Request failed", error);
   }
 
   const transcriptionError =
@@ -133,6 +133,7 @@ export function createTranscriptionHandler(
 ) {
   return async function transcribe(c: Context): Promise<Response> {
     try {
+      console.log("[API:Transcription] Starting request");
       await getAuthenticatedUser(c, dependencies.getSession);
       const file = await getAudioFile(c);
 
@@ -159,7 +160,7 @@ export function createTranscriptionHandler(
           body,
         });
       } catch (error) {
-        console.error("Sarvam transcription request failed", error);
+        console.error("[API:Transcription] Provider request failed", error);
         throw new TranscriptionHttpError(
           502,
           "upstream_error",

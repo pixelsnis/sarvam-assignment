@@ -28,16 +28,19 @@ extension APIClient {
     }
 
     func load() async {
+      print("[App:ChatSession] Loading messages")
       do {
         messages = try await chats.get(id: id).messages
         errorMessage = nil
       } catch {
+        print("[App:ChatSession] Load failed")
         errorMessage = error.localizedDescription
         state = .failed
       }
     }
 
     func send(_ content: String) async {
+      print("[App:ChatSession] Sending message")
       guard streamTask == nil, !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
       streamChunks = []
       streamingAssistantMessage = StreamingAssistantMessage()
@@ -62,6 +65,7 @@ extension APIClient {
           }
         } catch {
           if !Task.isCancelled {
+            print("[App:ChatSession] Stream failed")
             errorMessage = error.localizedDescription
             state = .failed
           }
@@ -73,6 +77,7 @@ extension APIClient {
     }
 
     func cancel() {
+      print("[App:ChatSession] Cancelling stream")
       streamTask?.cancel()
       streamTask = nil
       if state == .streaming { state = .idle }

@@ -9,6 +9,7 @@ extension APIClient.Transcriptions {
   /// - Returns: The transcribed audio text.
   /// - Throws: An `APIClient.APIError` when the upload or response fails.
   func transcribe(fileAt fileURL: URL) async throws -> String {
+    print("[App:TranscriptionAPI] Upload started")
     let url = client.configuration.baseURL.appendingPathComponent("transcriptions")
 
     let response =
@@ -65,6 +66,7 @@ extension APIClient.Transcriptions {
       throw APIClient.APIError.decoding(error)
     }
 
+    print("[App:TranscriptionAPI] Upload succeeded")
     return transcriptionResponse.transcript
   }
 

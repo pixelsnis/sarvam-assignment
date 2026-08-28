@@ -64,7 +64,9 @@ The response contains the transcript:
 bun run dev
 ```
 
-The API listens on `http://localhost:3000` by default.
+The API listens on `http://localhost:3000` by default and broadcasts the
+`_sarvam-api._tcp` Bonjour service on the local network. Set `PORT` to
+advertise a different HTTP port.
 
 Routes:
 

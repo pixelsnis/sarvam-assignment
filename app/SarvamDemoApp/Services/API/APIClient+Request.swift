@@ -11,10 +11,23 @@ extension APIClient {
     method: HTTPMethod,
     body: Data? = nil
   ) throws -> URLRequest {
+    print("[App:API] Building \(method.rawValue) \(path)")
     let url = configuration.baseURL.appendingPathComponent(path)
     var request = URLRequest(url: url)
     request.httpMethod = method.rawValue
     request.setValue("application/json", forHTTPHeaderField: "Accept")
+
+    // Better Auth validates the Origin header for cookie-authenticated POSTs.
+    // URLSession does not add one for native requests, so provide the API's
+    // origin explicitly (without including a path).
+    if var originComponents = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+      originComponents.path = ""
+      originComponents.query = nil
+      originComponents.fragment = nil
+      if let origin = originComponents.string {
+        request.setValue(origin, forHTTPHeaderField: "Origin")
+      }
+    }
 
     if let body {
       request.httpBody = body
@@ -26,7 +39,9 @@ extension APIClient {
 
   func encode<Body: Encodable>(_ body: Body) throws -> Data {
     do {
-      return try encoder.encode(body)
+      let data = try encoder.encode(body)
+      print("[App:API] Request body encoded")
+      return data
     } catch {
       throw APIError.encoding(error)
     }
@@ -47,14 +62,17 @@ extension APIClient {
   }
 
   private func performData(_ request: URLRequest) async throws -> Data {
+    print("[App:API] Request started")
     let data: Data
     let response: URLResponse
 
     do {
       (data, response) = try await session.data(for: request)
     } catch let error as URLError {
+      print("[App:API] Transport request failed")
       throw APIError.transport(error)
     } catch {
+      print("[App:API] Request failed")
       throw APIError.request(error)
     }
 
@@ -63,6 +81,7 @@ extension APIClient {
     }
 
     guard (200..<300).contains(response.statusCode) else {
+      print("[App:API] Request failed with HTTP \(response.statusCode)")
       let payload = try? decoder.decode(APIError.ErrorPayload.self, from: data)
       throw APIError.http(
         statusCode: response.statusCode,
@@ -70,6 +89,7 @@ extension APIClient {
       )
     }
 
+    print("[App:API] Request succeeded with HTTP \(response.statusCode)")
     return data
   }
 
