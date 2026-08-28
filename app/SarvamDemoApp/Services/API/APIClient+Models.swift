@@ -1,6 +1,11 @@
 import Foundation
 
 extension APIClient {
+  struct EmailOTPRequest: Encodable {
+    let email: String
+    let type: String
+  }
+
   struct User: Codable, Equatable, Identifiable {
     let id: String
     let name: String

@@ -1,21 +1,12 @@
 import Foundation
 
 extension Auth {
-  func signUp(
-    name: String,
-    email: String,
-    password: String
-  ) async throws {
+  func requestOTP(email: String) async throws {
     setLoading(true)
     defer { setLoading(false) }
 
     do {
-      let authSession = try await apiClient.accountAPI.signUp(
-        name: name,
-        email: email,
-        password: password
-      )
-      apply(authSession)
+      try await apiClient.accountAPI.sendOTP(email: email)
       clearError()
     } catch {
       record(error: error)
@@ -23,14 +14,32 @@ extension Auth {
     }
   }
 
-  func signIn(email: String, password: String) async throws {
+  func resendOTP(email: String) async throws {
     setLoading(true)
     defer { setLoading(false) }
 
     do {
-      let authSession = try await apiClient.accountAPI.signIn(
+      try await apiClient.accountAPI.resendOTP(email: email)
+      clearError()
+    } catch {
+      record(error: error)
+      throw error
+    }
+  }
+
+  func verifyOTP(
+    email: String,
+    otp: String,
+    name: String? = nil
+  ) async throws {
+    setLoading(true)
+    defer { setLoading(false) }
+
+    do {
+      let authSession = try await apiClient.accountAPI.verifyOTP(
         email: email,
-        password: password
+        otp: otp,
+        name: name
       )
       apply(authSession)
       clearError()

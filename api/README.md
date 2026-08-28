@@ -1,6 +1,6 @@
 # Sarvam API
 
-Bun API foundation using Hono, Better Auth, Drizzle ORM, and PostgreSQL 16.
+Bun API foundation using Hono, Better Auth email OTP, Drizzle ORM, Resend, and PostgreSQL 16.
 
 ## Setup
 
@@ -46,6 +46,19 @@ Apply migrations to the configured PostgreSQL database:
 bun run db:migrate
 ```
 
+## Email OTP
+
+Set `RESEND_API_KEY` and `RESEND_FROM` in `.env`. The sender address must use a
+verified Resend domain. The server sends OTPs only for the `sign-in` flow.
+
+The email OTP lifecycle is:
+
+1. `POST /auth/email-otp/send-verification-otp` with `{ "email": "...", "type": "sign-in" }`.
+2. `POST /auth/sign-in/email-otp` with `{ "email": "...", "otp": "...", "name": "..." }`.
+
+The second request can automatically create a new account when the email is
+not registered yet. Resending an OTP uses the first endpoint again.
+
 ## Run the API
 
 Development mode:
@@ -59,7 +72,7 @@ The API listens on `http://localhost:3000` by default.
 Routes:
 
 - `GET /health` — API liveness check.
-- `GET /auth/*` and `POST /auth/*` — Better Auth endpoints, including email/password authentication.
+- `GET /auth/*` and `POST /auth/*` — Better Auth endpoints, including email OTP authentication.
 
 Type-check the project with:
 
