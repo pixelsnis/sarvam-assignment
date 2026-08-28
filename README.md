@@ -12,22 +12,22 @@ https://github.com/user-attachments/assets/4deba44d-60e6-43ce-a359-d22a2eae73ff
 
 ## What’s implemented
 
-| Area | Implemented | Status / notes |
-| --- | --- | --- |
-| Email authentication | Email sign-in and account creation with OTPs | Working, including OTP resend |
-| User setup | First-time user name collection and session persistence | Working |
-| Chat streaming | Streaming assistant responses | Working; uses Sarvam 105B |
-| Conversation persistence | User and assistant messages stored in PostgreSQL | Working at the API level |
-| Web search tool | Tavily-powered web search during chat responses | Working |
-| Voice dictation | Audio recording and speech-to-text | Working; uses Saaras |
-| Local API discovery | Bonjour/mDNS discovery of the development API | Working for the local demo setup |
-| Google sign-in | UI is present | No-op |
-| Apple sign-in | UI is present | No-op |
-| Phone authentication | UI is present | No-op |
-| Attachments | Included in the Figma direction | Figma designs only |
-| Agent switching | Included in the Figma direction | Figma designs only |
-| Chat history and sidebar | Included in the Figma direction | OOS for this assignment |
-| Connectors | Included in the Figma direction | OOS for this assignment |
+| Area                     | Implemented                                             | Status / notes                   |
+| ------------------------ | ------------------------------------------------------- | -------------------------------- |
+| Email authentication     | Email sign-in and account creation with OTPs            | Working, including OTP resend    |
+| User setup               | First-time user name collection and session persistence | Working                          |
+| Chat streaming           | Streaming assistant responses                           | Working; uses Sarvam 105B        |
+| Conversation persistence | User and assistant messages stored in PostgreSQL        | Working at the API level         |
+| Web search tool          | Tavily-powered web search during chat responses         | Working                          |
+| Voice dictation          | Audio recording and speech-to-text                      | Working; uses Saaras             |
+| Local API discovery      | Bonjour/mDNS discovery of the development API           | Working for the local demo setup |
+| Google sign-in           | UI is present                                           | No-op                            |
+| Apple sign-in            | UI is present                                           | No-op                            |
+| Phone authentication     | UI is present                                           | No-op                            |
+| Attachments              | Included in the Figma direction                         | Figma designs only               |
+| Agent switching          | Included in the Figma direction                         | Figma designs only               |
+| Chat history and sidebar | Included in the Figma direction                         | OOS for this assignment          |
+| Connectors               | Included in the Figma direction                         | OOS for this assignment          |
 
 The assignment focused on bringing the onboarding and core chat stream to life. The remaining surfaces are represented according to their current design or scope status above.
 
@@ -42,9 +42,9 @@ The API uses Better Auth for email OTP sessions, Drizzle ORM for PostgreSQL acce
 
 ## Requirements
 
-- macOS
-- Xcode with support for the project’s iOS deployment target
-- iOS 27.0 or later, either on a device or simulator
+- macOS 26.0 or newer
+- Xcode 26.0 or newer
+- iOS 26.0 or newer, either on a device or simulator
 - Bun 1.x
 - Docker Desktop (or another Docker installation with Compose)
 - A Resend API key and verified sender address for OTP email
