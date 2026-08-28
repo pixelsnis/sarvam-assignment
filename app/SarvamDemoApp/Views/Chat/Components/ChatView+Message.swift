@@ -6,10 +6,15 @@ extension ChatView {
       
     }
   }
-  
+
   struct UserMessage: View {
     var body: some View {
-      
+
     }
+  }
+}
+
+#Preview {
+  VStack {
   }
 }

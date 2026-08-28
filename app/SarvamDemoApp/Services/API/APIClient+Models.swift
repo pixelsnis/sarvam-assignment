@@ -31,6 +31,10 @@ extension APIClient {
     let user: User
   }
 
+  struct TranscriptionResponse: Decodable, Equatable, Sendable {
+    let transcript: String
+  }
+
   struct EmailOTPAuthenticationResponse: Decodable {
     let token: String?
     let user: User

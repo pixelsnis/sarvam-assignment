@@ -1,3 +1,4 @@
+import Alamofire
 import Foundation
 
 final class APIClient {
@@ -12,7 +13,7 @@ final class APIClient {
   static let shared = APIClient()
   static var account: Account { shared.accountAPI }
   static var auth: Auth { shared.authAPI }
-  static var chat: Chat { shared.chatAPI }
+  static var transcriptions: Transcriptions { shared.transcriptionsAPI }
 
   let configuration: Configuration
   let session: URLSession
@@ -20,7 +21,7 @@ final class APIClient {
   let encoder: JSONEncoder
   lazy var accountAPI = Account(client: self)
   lazy var authAPI = Auth(client: self)
-  lazy var chatAPI = Chat(client: self)
+  lazy var transcriptionsAPI = Transcriptions(client: self)
 
   init(configuration: Configuration = .default, session: URLSession? = nil) {
     self.configuration = configuration
@@ -76,6 +77,18 @@ final class APIClient {
 
     init(client: APIClient) {
       self.client = client
+    }
+  }
+
+  final class Transcriptions {
+    let client: APIClient
+    let session: Alamofire.Session
+
+    init(client: APIClient) {
+      self.client = client
+      self.session = Alamofire.Session(
+        configuration: client.session.configuration
+      )
     }
   }
 }
