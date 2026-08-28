@@ -2,6 +2,8 @@ import SwiftUI
 
 extension ChatView {
   struct Toolbar: ToolbarContent {
+    @Environment(ViewModel.self) private var viewModel
+
     var body: some ToolbarContent {
       ToolbarItem(placement: .topBarLeading) {
         Button("Sidebar", systemImage: "sidebar.left") {
@@ -11,7 +13,7 @@ extension ChatView {
       
       ToolbarItem(placement: .topBarTrailing) {
         Button("New Chat", systemImage: "square.and.pencil") {
-          
+          viewModel.startNewChat()
         }
       }
     }
@@ -19,6 +21,8 @@ extension ChatView {
 }
 
 #Preview {
+  @Previewable @State var viewModel = ChatView.ViewModel()
+
   NavigationStack {
     VStack {
     }
@@ -26,4 +30,5 @@ extension ChatView {
       ChatView.Toolbar()
     }
   }
+  .environment(viewModel)
 }

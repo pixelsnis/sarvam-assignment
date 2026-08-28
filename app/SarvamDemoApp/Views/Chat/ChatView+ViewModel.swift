@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import SwiftUI
 
 extension ChatView {
   @MainActor
@@ -11,13 +12,29 @@ extension ChatView {
       case transcribing
     }
 
+    enum SubmissionState: Equatable {
+      case idle
+      case creatingChat
+      case streaming
+      case failed
+
+      var isBusy: Bool {
+        switch self {
+        case .creatingChat, .streaming: true
+        case .idle, .failed: false
+        }
+      }
+    }
+
     // MARK: Dependencies
 
     let audioRecorder: AudioRecorder
     let transcriptionsAPI: APIClient.Transcriptions
+    let chats: APIClient.Chats
 
     @ObservationIgnored private var transcriptionTask: Task<Void, Never>?
     @ObservationIgnored private var dictationGeneration: UInt = 0
+    @ObservationIgnored private var submissionTask: Task<Void, Never>?
 
     // MARK: Input
 
@@ -27,15 +44,30 @@ extension ChatView {
 
     var dictationState: DictationState = .idle
     var isTranscribing = false
+    var submissionState: SubmissionState = .idle
+    var chatID: String?
+    var messages: [APIClient.ChatMessage] = []
+    var streamChunks: [APIClient.ChatStreamChunk] = []
+    var streamingAssistantMessage = APIClient.StreamingAssistantMessage()
+    var errorMessage: String?
+    var scrollRevision: UInt = 0
+    private(set) var pendingPrompt: String?
+    private(set) var pendingMessageID: String?
+
+    var canSubmit: Bool {
+      !submissionState.isBusy && dictationState == .idle && !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 
     init() {
       audioRecorder = AudioRecorder()
       transcriptionsAPI = APIClient.transcriptions
+      chats = APIClient.chats
     }
 
     init(audioRecorder: AudioRecorder) {
       self.audioRecorder = audioRecorder
       self.transcriptionsAPI = APIClient.transcriptions
+      self.chats = APIClient.chats
     }
 
     init(
@@ -44,6 +76,125 @@ extension ChatView {
     ) {
       self.audioRecorder = audioRecorder
       self.transcriptionsAPI = transcriptionsAPI
+      self.chats = APIClient.chats
+    }
+
+    init(audioRecorder: AudioRecorder, transcriptionsAPI: APIClient.Transcriptions, chats: APIClient.Chats) {
+      self.audioRecorder = audioRecorder
+      self.transcriptionsAPI = transcriptionsAPI
+      self.chats = chats
+    }
+
+    deinit {
+      submissionTask?.cancel()
+      transcriptionTask?.cancel()
+    }
+
+    func submit() async {
+      let prompt = text.trimmingCharacters(in: .whitespacesAndNewlines)
+      guard !prompt.isEmpty, !submissionState.isBusy else { return }
+
+      errorMessage = nil
+      if let pendingPrompt, pendingPrompt != prompt, let pendingMessageID {
+        messages.removeAll { $0.id == pendingMessageID }
+        self.pendingPrompt = nil
+        self.pendingMessageID = nil
+      }
+
+      if pendingMessageID == nil {
+        let message = APIClient.UserMessage(
+          id: UUID().uuidString,
+          role: "user",
+          content: [.text(.init(type: "text", text: prompt))],
+          createdAt: .now
+        )
+        pendingMessageID = message.id
+        pendingPrompt = prompt
+        withAnimation(.smooth) {
+          messages.append(.user(message))
+          scrollRevision &+= 1
+        }
+      }
+      text = ""
+      let task = Task { [weak self] in
+        guard let self else { return }
+        await self.performSubmission(prompt)
+      }
+      submissionTask = task
+      await task.value
+    }
+
+    private func performSubmission(_ prompt: String) async {
+      defer { submissionTask = nil }
+      do {
+        if chatID == nil {
+          submissionState = .creatingChat
+          chatID = try await chats.create()
+        }
+        guard let chatID else { throw SubmissionError.missingChatID }
+
+        submissionState = .streaming
+        streamChunks = []
+        streamingAssistantMessage = .init()
+        var receivedEnd = false
+        for try await chunk in chats.stream(id: chatID, content: prompt) {
+          try Task.checkCancellation()
+          streamChunks.append(chunk)
+          streamingAssistantMessage.chunks.append(chunk)
+          scrollRevision &+= 1
+          if case .end(let end) = chunk {
+            receivedEnd = true
+            if end.outcome == .failed {
+              throw SubmissionError.server(end.error?.message ?? "The response failed.")
+            }
+            streamChunks = []
+            streamingAssistantMessage = .init()
+            messages = end.messages
+            pendingPrompt = nil
+            pendingMessageID = nil
+            submissionState = .idle
+            scrollRevision &+= 1
+          }
+        }
+        if !receivedEnd { throw SubmissionError.missingEnd }
+      } catch is CancellationError {
+        return
+      } catch {
+        streamChunks = []
+        streamingAssistantMessage = .init()
+        text = prompt
+        errorMessage = error.localizedDescription
+        submissionState = .failed
+      }
+    }
+
+    func dismissError() {
+      errorMessage = nil
+      if submissionState == .failed { submissionState = .idle }
+    }
+
+    func startNewChat() {
+      submissionTask?.cancel()
+      submissionTask = nil
+      cancelDictation()
+      chatID = nil
+      messages = []
+      streamChunks = []
+      streamingAssistantMessage = .init()
+      submissionState = .idle
+      pendingPrompt = nil
+      pendingMessageID = nil
+      errorMessage = nil
+      text = ""
+      scrollRevision &+= 1
+    }
+
+    func cancelSubmission() {
+      submissionTask?.cancel()
+      submissionTask = nil
+      streamChunks = []
+      streamingAssistantMessage = .init()
+      if submissionState.isBusy { submissionState = .idle }
     }
 
     func startDictation() async {
@@ -53,6 +204,7 @@ extension ChatView {
         try await audioRecorder.start()
         dictationState = .recording
       } catch {
+        errorMessage = error.localizedDescription
         dictationState = .idle
       }
     }
@@ -114,13 +266,31 @@ extension ChatView {
       }
 
       guard !Task.isCancelled else { return }
-      guard let transcription = try? await transcriptionsAPI.transcribe(fileAt: fileURL) else {
+      let transcription: String
+      do {
+        transcription = try await transcriptionsAPI.transcribe(fileAt: fileURL)
+      } catch {
+        errorMessage = error.localizedDescription
         return
       }
 
       guard !Task.isCancelled, generation == dictationGeneration else { return }
 
       text = "\(text) \(transcription)".trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private enum SubmissionError: LocalizedError {
+      case missingChatID
+      case missingEnd
+      case server(String)
+
+      var errorDescription: String? {
+        switch self {
+        case .missingChatID: "Unable to create a chat."
+        case .missingEnd: "The response ended unexpectedly."
+        case .server(let message): message
+        }
+      }
     }
   }
 }

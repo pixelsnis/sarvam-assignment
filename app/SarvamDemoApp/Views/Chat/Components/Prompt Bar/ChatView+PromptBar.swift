@@ -32,6 +32,7 @@ extension ChatView {
         TextField("Ask Sarvam", text: $viewModel.text, axis: .vertical)
           .padding(.horizontal, 16)
           .padding(.vertical, 12)
+          .onSubmit { Task { await viewModel.submit() } }
 
         ActionBar()
       }
@@ -57,8 +58,10 @@ extension ChatView {
 
         Spacer()
 
-        PromptBarActionButton("Send", systemImage: "arrow.up") {
+        PromptBarActionButton("Send", systemImage: "arrow.up", loading: .constant(viewModel.submissionState.isBusy)) {
+          await viewModel.submit()
         }
+        .disabled(!viewModel.canSubmit)
       }
       .buttonStyle(.plain)
       .labelStyle(.iconOnly)
