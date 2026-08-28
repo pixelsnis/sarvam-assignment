@@ -24,7 +24,7 @@ extension SetupView {
     
     var body: some View {
       VStack(alignment: .leading, spacing: 10) {
-        Image(.sarvamLogoMonochrome)
+        Image("Sarvam Logo Monochrome")
           .resizable()
           .scaledToFit()
           .frame(height: 32)

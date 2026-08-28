@@ -13,6 +13,7 @@ extension Auth {
       clearError()
     } catch let error as APIClient.APIError where error.statusCode == 401 {
       apply(nil)
+      markLoggedOut()
       record(error: error)
     } catch {
       // Keep a known session during transient network failures. If the
@@ -28,6 +29,7 @@ extension Auth {
     do {
       try await apiClient.authAPI.signOut()
       apply(nil)
+      markLoggedOut()
       clearError()
     } catch {
       record(error: error)

@@ -40,11 +40,12 @@ extension SetupView {
     }
     
     private var submitEnabled: Bool {
-      if case .unknown = viewModel.inputContentType {
+      switch viewModel.inputContentType {
+      case .email:
+        return true
+      case .phone, .unknown:
         return false
       }
-      
-      return true
     }
     
     var body: some View {
@@ -61,8 +62,8 @@ extension SetupView {
           }
         
         if isButtonVisible {
-          PromptBarActionButton("Next", systemImage: "arrow.right") {
-            
+          PromptBarActionButton("Next", systemImage: "arrow.right", loading: $viewModel.isLoading) {
+            await viewModel.submitEmail()
           }
           .disabled(!submitEnabled)
           .transition(.blurReplace)
@@ -84,13 +85,17 @@ extension SetupView {
     
     var body: some View {
       @Bindable var viewModel = viewModel
-      
+
       HStack(spacing: 10) {
         TextField("XXX-XXX", text: $viewModel.otp)
+          .onChange(of: viewModel.otp) { _, value in
+            viewModel.updateOTP(value)
+          }
           .keyboardType(.numberPad)
           .fontDesign(.monospaced)
           .tracking(20)
           .fontWeight(.semibold)
+          .foregroundStyle(viewModel.error == "Invalid OTP." ? .red : .primary)
           .multilineTextAlignment(.center)
           .frame(height: 54)
           .glassEffect(.regular, in: .capsule)
@@ -99,8 +104,9 @@ extension SetupView {
         
         Menu {
           Button("Resend OTP") {
-            
+            Task { await viewModel.resendOTP() }
           }
+          .disabled(viewModel.resendSecondsRemaining > 0 || viewModel.isLoading)
         } label: {
           Image(systemName: "arrow.clockwise")
             .font(.title3.weight(.semibold))
@@ -124,10 +130,10 @@ extension SetupView {
       HStack {
         TextField("Type here", text: $viewModel.name)
         
-        PromptBarActionButton("Next", systemImage: "arrow.right") {
-          
+        PromptBarActionButton("Next", systemImage: "arrow.right", loading: $viewModel.isLoading) {
+          await viewModel.submitName()
         }
-        .disabled(!viewModel.isNameValid)
+        .disabled(viewModel.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
       }
       .padding(.leading, 20)
       .padding(.trailing, 8)

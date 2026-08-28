@@ -15,7 +15,7 @@ extension SetupView {
       if viewModel.stage != .intro {
         ToolbarItem(placement: .cancellationAction) {
           Button("Back", systemImage: "chevron.left") {
-            
+            viewModel.goBack()
           }
           .labelStyle(.iconOnly)
         }

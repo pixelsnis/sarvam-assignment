@@ -29,18 +29,34 @@ extension Auth {
 
   func verifyOTP(
     email: String,
-    otp: String,
-    name: String? = nil
+    otp: String
   ) async throws {
     setLoading(true)
     defer { setLoading(false) }
 
     do {
-      let authSession = try await apiClient.accountAPI.verifyOTP(
+      _ = try await apiClient.accountAPI.verifyOTP(
         email: email,
-        otp: otp,
-        name: name
+        otp: otp
       )
+      guard let authSession = try await apiClient.authAPI.getSession() else {
+        throw APIClient.APIError.invalidResponse
+      }
+      apply(authSession)
+      clearError()
+    } catch {
+      record(error: error)
+      throw error
+    }
+  }
+
+  func updateUser(name: String) async throws {
+    setLoading(true)
+    defer { setLoading(false) }
+
+    do {
+      try await apiClient.accountAPI.updateUser(name: name)
+      let authSession = try await apiClient.authAPI.getSession()
       apply(authSession)
       clearError()
     } catch {

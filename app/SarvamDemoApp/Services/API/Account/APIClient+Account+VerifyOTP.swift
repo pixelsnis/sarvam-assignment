@@ -9,19 +9,20 @@ extension APIClient.Account {
 
   func verifyOTP(
     email: String,
-    otp: String,
-    name: String? = nil
-  ) async throws -> APIClient.AuthSession {
+    otp: String
+  ) async throws -> APIClient.User {
     let payload = try client.encode(VerifyOTPPayload(
       email: email,
       otp: otp,
-      name: name
+      name: nil
     ))
 
-    return try await client.perform(
+    let response: APIClient.EmailOTPAuthenticationResponse = try await client.perform(
       path: "auth/sign-in/email-otp",
       method: .post,
       body: payload
     )
+
+    return response.user
   }
 }

@@ -30,4 +30,9 @@ extension APIClient {
     let session: Session
     let user: User
   }
+
+  struct EmailOTPAuthenticationResponse: Decodable {
+    let token: String?
+    let user: User
+  }
 }

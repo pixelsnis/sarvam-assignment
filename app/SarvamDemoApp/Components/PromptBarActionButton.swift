@@ -13,7 +13,7 @@ struct PromptBarActionButton: View {
   let loading: Binding<Bool>
   let gradient: [Gradient.Stop]
   let action: () async -> Void
-  
+
   init(_ titleKey: String, systemImage: String, loading: Binding<Bool> = .constant(false), gradient: [Gradient.Stop] = [.init(color: .init(hex: "B81514"), location: 0.0), .init(color: .init(hex: "FFCB79"), location: 1.0)], action: @escaping () async -> Void) {
     self.titleKey = titleKey
     self.systemImage = systemImage
@@ -26,18 +26,26 @@ struct PromptBarActionButton: View {
   
   var body: some View {
     Button(action: onPress) {
-      Label(titleKey, systemImage: systemImage)
-        .labelStyle(.iconOnly)
-        .font(.headline)
-        .foregroundStyle(isEnabled ? .white : .secondary)
-        .frame(width: 56, height: 40)
-        .background {
-          LinearGradient(stops: gradient, startPoint: .top, endPoint: .bottom)
-            .opacity(isEnabled ? 1 : 0.0)
+      VStack {
+        if isEnabled {
+          buttonContent()
+            .foregroundStyle(.white)
+            .tint(.secondary)
+            .frame(width: 56, height: 40)
+            .background(LinearGradient(stops: gradient, startPoint: .top, endPoint: .bottom))
+            .clipShape(.capsule)
+            .glassEffect(.regular.interactive(), in: .capsule)
+            .contentShape(.capsule)
+        } else {
+          buttonContent()
+            .foregroundStyle(.secondary)
+            .tint(.secondary)
+            .frame(width: 56, height: 40)
+            .background(.quaternary)
+            .clipShape(.capsule)
+            .contentShape(.capsule)
         }
-        .clipShape(.capsule)
-        .glassEffect(.regular.interactive(), in: .capsule)
-        .contentShape(.capsule)
+      }
     }
     .buttonStyle(.plain)
     .disabled(!isEnabled)
@@ -53,10 +61,26 @@ struct PromptBarActionButton: View {
       await action()
     }
   }
+
+  @ViewBuilder private func buttonContent() -> some View {
+    ZStack {
+      if loading.wrappedValue {
+        ProgressView()
+          .frame(height: 24)
+          .transition(.blurReplace)
+      } else {
+        Label(titleKey, systemImage: systemImage)
+          .transition(.blurReplace)
+      }
+    }
+    .animation(.default, value: loading.wrappedValue)
+    .labelStyle(.iconOnly)
+    .font(.headline)
+  }
 }
 
 #Preview {
-  PromptBarActionButton("Send", systemImage: "arrow.right") {
+  PromptBarActionButton("Send", systemImage: "arrow.right", loading: .constant(false)) {
     print("Test")
   }
 }

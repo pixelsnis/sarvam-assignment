@@ -11,6 +11,8 @@ struct SetupView: View {
     VStack(spacing: 16) {
       if vm.stage == .intro {
         Self.LogoLarge()
+      } else {
+        Self.StepDetail()
       }
       
       if showAllActions {

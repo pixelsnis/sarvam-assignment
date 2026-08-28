@@ -16,8 +16,14 @@ extension SetupView {
     case unknown
   }
   
+  @MainActor
   @Observable
   final class ViewModel {
+    let auth: Auth
+
+    private var resendTask: Task<Void, Never>?
+    private var otpErrorTask: Task<Void, Never>?
+
     // MARK: Input
     
     var emailOrPhone: String = ""
@@ -29,6 +35,12 @@ extension SetupView {
     var stage: SetupStage = .intro
     var inputFieldFocused = false
     var error: String?
+    var isLoading = false
+    var resendSecondsRemaining = 0
+
+    init(auth: Auth? = nil) {
+      self.auth = auth ?? Auth.shared
+    }
     
     // MARK: Computed Properties
     
@@ -60,13 +72,147 @@ extension SetupView {
 
     var isNameValid: Bool {
       let normalizedName = name.precomposedStringWithCanonicalMapping
-      let hasAlphanumeric = normalizedName.unicodeScalars.contains {
-        CharacterSet.alphanumerics.contains($0)
+      let hasLetter = normalizedName.unicodeScalars.contains {
+        CharacterSet.letters.contains($0)
       }
 
-      return hasAlphanumeric && normalizedName.unicodeScalars.allSatisfy {
-        CharacterSet.alphanumerics.contains($0) || CharacterSet.nonBaseCharacters.contains($0)
+      return hasLetter && normalizedName.unicodeScalars.allSatisfy {
+        CharacterSet.letters.contains($0)
+          || CharacterSet.nonBaseCharacters.contains($0)
+          || CharacterSet.whitespaces.contains($0)
       }
     }
+
+    var normalizedEmail: String? {
+      guard case .email = inputContentType else { return nil }
+      return emailOrPhone.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    func submitEmail() async {
+      guard let email = normalizedEmail else { return }
+
+      await runLoading {
+        do {
+          try await auth.requestOTP(email: email)
+          error = nil
+          otp = ""
+          stage = .otpInput
+          startResendCooldown()
+        } catch {
+          self.error = error.localizedDescription
+        }
+      }
+    }
+
+    func resendOTP() async {
+      guard let email = normalizedEmail, resendSecondsRemaining == 0, !isLoading else { return }
+
+      await runLoading {
+        do {
+          try await auth.resendOTP(email: email)
+          error = nil
+          otp = ""
+          startResendCooldown()
+        } catch {
+          self.error = error.localizedDescription
+        }
+      }
+    }
+
+    func updateOTP(_ value: String) {
+      let digits = value.filter(\.isNumber)
+      otp = String(digits.prefix(6))
+
+      guard otp.count == 6, !isLoading else { return }
+      Task { await verifyOTP() }
+    }
+
+    func verifyOTP() async {
+      guard let email = normalizedEmail, otp.count == 6, !isLoading else { return }
+
+      await runLoading {
+        do {
+          try await auth.verifyOTP(email: email, otp: otp)
+          error = nil
+
+          if auth.user?.name.isEmpty == true {
+            stage = .createAccount
+          } else {
+            auth.markLoggedIn()
+          }
+        } catch let apiError as APIClient.APIError where apiError.statusCode == 400 {
+          showInvalidOTP()
+        } catch {
+          self.error = error.localizedDescription
+        }
+      }
+    }
+
+    func submitName() async {
+      guard isNameValid else {
+        error = "Alphabets and accents only."
+        return
+      }
+
+      await runLoading {
+        do {
+          try await auth.updateUser(name: name.trimmingCharacters(in: .whitespacesAndNewlines))
+          error = nil
+          auth.markLoggedIn()
+        } catch {
+          self.error = error.localizedDescription
+        }
+      }
+    }
+
+    func goBack() {
+      switch stage {
+      case .intro:
+        break
+      case .otpInput, .createAccount:
+        stage = .intro
+        otp = ""
+        error = nil
+        cancelTasks()
+      }
+    }
+
+    private func runLoading(_ operation: () async -> Void) async {
+      isLoading = true
+      defer { isLoading = false }
+      await operation()
+    }
+
+    private func showInvalidOTP() {
+      otp = ""
+      error = "Invalid OTP."
+      otpErrorTask?.cancel()
+      otpErrorTask = Task { [weak self] in
+        try? await Task.sleep(nanoseconds: 2_000_000_000)
+        guard !Task.isCancelled else { return }
+        self?.error = nil
+      }
+    }
+
+    private func startResendCooldown() {
+      resendTask?.cancel()
+      resendSecondsRemaining = 30
+      resendTask = Task { [weak self] in
+        for remaining in stride(from: 29, through: 0, by: -1) {
+          try? await Task.sleep(nanoseconds: 1_000_000_000)
+          guard !Task.isCancelled else { return }
+          self?.resendSecondsRemaining = remaining
+        }
+      }
+    }
+
+    private func cancelTasks() {
+      resendTask?.cancel()
+      resendTask = nil
+      otpErrorTask?.cancel()
+      otpErrorTask = nil
+      resendSecondsRemaining = 0
+    }
+
   }
 }
