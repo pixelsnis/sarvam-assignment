@@ -52,6 +52,7 @@ extension ChatView {
     var body: some View {
       HStack(spacing: 16) {
         Button("Dictate", systemImage: "mic") {
+          UIApplication.shared.dismissKeyboard()
           Task {
             await viewModel.startDictation()
           }

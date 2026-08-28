@@ -234,3 +234,18 @@ extension APIClient {
     struct StreamError: Codable, Equatable, Sendable { let code: String; let message: String }
   }
 }
+
+extension Array where Element == APIClient.ChatMessage {
+  /// Merges a completed stream turn into the retained conversation history.
+  func merging(_ incoming: [Element]) -> [Element] {
+    var result = self
+    for message in incoming {
+      if let index = result.firstIndex(where: { $0.id == message.id }) {
+        result[index] = message
+      } else {
+        result.append(message)
+      }
+    }
+    return result
+  }
+}

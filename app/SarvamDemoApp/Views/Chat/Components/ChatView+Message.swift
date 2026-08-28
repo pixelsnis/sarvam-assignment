@@ -47,7 +47,9 @@ extension ChatView {
       return .visible(toolCall.label)
     case .toolResult(let toolResult):
       return .visible(toolResult.label)
-    case .start, .textDelta, .end:
+    case .textDelta:
+      return .hidden
+    case .start, .end:
       return .visible("")
     }
   }

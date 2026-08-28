@@ -59,7 +59,8 @@ extension APIClient {
             streamChunks.append(chunk)
             streamingAssistantMessage.chunks.append(chunk)
             if case .end(let end) = chunk {
-              messages = end.messages
+              // The stream only contains the completed turn; retain earlier turns.
+              messages = messages.merging(end.messages)
               if end.outcome == .failed {
                 errorMessage = end.error?.message
                 state = .failed

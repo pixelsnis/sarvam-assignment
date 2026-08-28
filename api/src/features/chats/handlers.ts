@@ -17,6 +17,12 @@ import { createChatStream } from "./stream";
 import { createChatTools } from "./tools";
 
 const CHAT_MODEL = "sarvam-105b";
+const CHAT_SYSTEM_INSTRUCTIONS =
+  "Do not send intermediary status updates or narrate your progress. " +
+  "Use tool calls and internal reasoning silently. " +
+  "Only send a final text response after all tool calls and reasoning have finished. " +
+  "Respond in plain text only. Do not use Markdown or any formatting, including bold, " +
+  "italics, headings, lists, code fences, or other markup.";
 
 // Exports createChatHandler.
 export function createChatHandler() {
@@ -108,6 +114,7 @@ export function streamChatHandler() {
         model: provider(CHAT_MODEL),
         tools: createChatTools(),
         stopWhen: stepCountIs(3),
+        system: CHAT_SYSTEM_INSTRUCTIONS,
         messages: [
           ...priorRows.map((row) => row.modelMessage as ModelMessage),
           userModelMessage,

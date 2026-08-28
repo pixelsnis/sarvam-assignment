@@ -158,7 +158,7 @@ extension ChatView {
             scrollRevision &+= 1
           }
           if case .end(let end) = chunk {
-            // 3. Replace the temporary stream with the persisted messages.
+            // 3. Reconcile the completed turn without dropping earlier turns.
             receivedEnd = true
             if end.outcome == .failed {
               throw SubmissionError.server(end.error?.message ?? "The response failed.")
@@ -166,7 +166,9 @@ extension ChatView {
             withAnimation(.smooth(duration: 0.3)) {
               streamChunks = []
               streamingAssistantMessage = .init()
-              messages = end.messages
+              messages = messages
+                .filter { $0.id != pendingMessageID }
+                .merging(end.messages)
               pendingPrompt = nil
               pendingMessageID = nil
               submissionState = .idle
