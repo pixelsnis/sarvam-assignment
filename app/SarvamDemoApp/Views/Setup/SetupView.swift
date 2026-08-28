@@ -9,7 +9,9 @@ struct SetupView: View {
   
   var body: some View {
     VStack(spacing: 16) {
-      Self.LogoLarge()
+      if vm.stage == .intro {
+        Self.LogoLarge()
+      }
       
       if showAllActions {
         VStack(spacing: 16) {

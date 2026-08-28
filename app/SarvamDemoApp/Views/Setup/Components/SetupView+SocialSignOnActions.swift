@@ -26,13 +26,19 @@ extension SetupView {
       Button {
         
       } label: {
-        Text("Sign in with Google")
-          .font(.headline)
-          .foregroundStyle(Color(uiColor: .systemBackground))
-          .padding(16)
-          .frame(maxWidth: .infinity)
-          .glassEffect(.regular.tint(Color(uiColor: .label)).interactive(), in: .capsule)
-          .contentShape(.capsule)
+        HStack(spacing: 8) {
+          Image("Google Logo")
+            .resizable()
+            .scaledToFit()
+            .frame(height: 20)
+          Text("Sign in with Google")
+        }
+        .font(.headline)
+        .foregroundStyle(Color(uiColor: .systemBackground))
+        .padding(16)
+        .frame(maxWidth: .infinity)
+        .glassEffect(.regular.tint(Color(uiColor: .label)).interactive(), in: .capsule)
+        .contentShape(.capsule)
       }
       .buttonStyle(.plain)
     }
