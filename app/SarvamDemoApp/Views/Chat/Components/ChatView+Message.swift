@@ -1,43 +1,103 @@
 import SwiftUI
 
 extension ChatView {
+  private enum AssistantEyebrowState: Equatable {
+    case hidden
+    case visible(String)
+  }
+
+  private static func eyebrowState(
+    for content: [APIClient.ChatContentPart],
+    visibleText: String?
+  ) -> AssistantEyebrowState {
+    guard visibleText == nil else {
+      return .hidden
+    }
+
+    guard let latestPart = content.last else {
+      return .visible("")
+    }
+
+    switch latestPart {
+    case .reasoning:
+      return .visible("Thinking")
+    case .toolCall(let toolCall):
+      return .visible(toolCall.label)
+    case .toolResult(let toolResult):
+      return .visible(toolResult.label)
+    case .text:
+      return .visible("")
+    }
+  }
+
+  private static func eyebrowState(
+    for chunks: [APIClient.ChatStreamChunk],
+    visibleText: String?
+  ) -> AssistantEyebrowState {
+    guard visibleText == nil else {
+      return .hidden
+    }
+
+    guard let latestChunk = chunks.last else {
+      return .visible("")
+    }
+
+    switch latestChunk {
+    case .reasoningDelta:
+      return .visible("Thinking")
+    case .toolCall(let toolCall):
+      return .visible(toolCall.label)
+    case .toolResult(let toolResult):
+      return .visible(toolResult.label)
+    case .start, .textDelta, .end:
+      return .visible("")
+    }
+  }
+
+  private struct AssistantEyebrowView: View {
+    let label: String
+
+    var body: some View {
+      HStack(spacing: 8) {
+        Image("Sarvam 105B")
+          .resizable()
+          .scaledToFit()
+          .frame(height: 24)
+
+        Text(label)
+          .foregroundStyle(.secondary)
+          .contentTransition(.numericText())
+          .shimmering()
+      }
+    }
+  }
+
   struct AssistantMessageView: View {
     let message: APIClient.AssistantMessage
-    
-    private var reasoningDurationText: String? {
-      guard let reasoningPart = message.content.first(where: { part in
-        if case .reasoning(_) = part {
-          return true
-        }
-        
-        return false
-      }) else {
-        return nil
-      }
-      
-      guard case let .reasoning(reasoning) = reasoningPart else {
-        return nil
-      }
-      
-      if reasoning.duration > 1 {
-        return "Thought for \(Int(reasoning.duration)) seconds"
-      }
-      
-      return "Thought briefly"
+
+    private var eyebrowState: AssistantEyebrowState {
+      ChatView.eyebrowState(
+        for: message.content,
+        visibleText: message.visibleTextContent
+      )
     }
 
     var body: some View {
       VStack(alignment: .leading, spacing: 10) {
-        if let reasoningDurationText {
-          Text(reasoningDurationText)
-            .foregroundStyle(.secondary)
+        if case .visible(let label) = eyebrowState {
+          AssistantEyebrowView(label: label)
+            .transition(.blurReplace)
         }
-        
+
         if let text = message.visibleTextContent {
           Text(text)
             .lineHeight(.loose)
+            .transition(.blurReplace)
         }
       }
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .animation(.default, value: eyebrowState)
+      .animation(.default, value: message.visibleTextContent)
     }
   }
 
@@ -61,7 +121,31 @@ extension ChatView {
   }
   
   struct StreamingAssistantMessageView: View {
+    let message: APIClient.StreamingAssistantMessage
+
+    private var eyebrowState: AssistantEyebrowState {
+      ChatView.eyebrowState(
+        for: message.chunks,
+        visibleText: message.visibleTextContent
+      )
+    }
+
     var body: some View {
+      VStack(alignment: .leading, spacing: 10) {
+        if case .visible(let label) = eyebrowState {
+          AssistantEyebrowView(label: label)
+            .transition(.blurReplace)
+        }
+
+        if let text = message.visibleTextContent {
+          Text(text)
+            .lineHeight(.loose)
+            .transition(.blurReplace)
+        }
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .animation(.default, value: eyebrowState)
+      .animation(.default, value: message.visibleTextContent)
     }
   }
 }
@@ -104,10 +188,78 @@ extension ChatView {
     ],
     createdAt: now
   )
+  let assistantStatusOnlyMessage = APIClient.AssistantMessage(
+    id: "preview-assistant-status-only-message",
+    role: "assistant",
+    content: [
+      .reasoning(.init(
+        type: "reasoning",
+        reasoning: "I’m still working through the answer.",
+        duration: 2.0
+      )),
+      .toolCall(.init(
+        type: "tool_call",
+        toolCallId: "preview-status-only-tool-call",
+        toolName: "read_file",
+        label: "Reading files"
+      ))
+    ],
+    createdAt: now
+  )
+  let streamingStart = APIClient.StreamingAssistantMessage(chunks: [
+    .start(.init(type: "start", messageId: "preview-streaming-message"))
+  ])
+  let streamingReasoning = APIClient.StreamingAssistantMessage(chunks: [
+    .start(.init(type: "start", messageId: "preview-streaming-message")),
+    .reasoningDelta(.init(type: "reasoning-delta", delta: "I’m thinking"))
+  ])
+  let streamingToolCall = APIClient.StreamingAssistantMessage(chunks: [
+    .start(.init(type: "start", messageId: "preview-streaming-message")),
+    .toolCall(.init(
+      type: "tool-call",
+      toolCallId: "preview-tool-call",
+      toolName: "read_file",
+      label: "Reading files"
+    ))
+  ])
+  let streamingToolResult = APIClient.StreamingAssistantMessage(chunks: [
+    .start(.init(type: "start", messageId: "preview-streaming-message")),
+    .toolResult(.init(
+      type: "tool-result",
+      toolCallId: "preview-tool-call",
+      toolName: "read_file",
+      label: "Read files"
+    ))
+  ])
+  let streamingText = APIClient.StreamingAssistantMessage(chunks: [
+    .start(.init(type: "start", messageId: "preview-streaming-message")),
+    .textDelta(.init(type: "text-delta", delta: "The response is streaming")),
+    .textDelta(.init(type: "text-delta", delta: " in now."))
+  ])
+  let streamingTextOnly = APIClient.StreamingAssistantMessage(chunks: [
+    .textDelta(.init(type: "text-delta", delta: "Text-only streaming hides the eyebrow."))
+  ])
+  let streamingTextThenTool = APIClient.StreamingAssistantMessage(chunks: [
+    .textDelta(.init(type: "text-delta", delta: "The next step is")),
+    .toolCall(.init(
+      type: "tool-call",
+      toolCallId: "preview-tool-call",
+      toolName: "read_file",
+      label: "Reading files"
+    ))
+  ])
 
   VStack(alignment: .leading, spacing: 20) {
     ChatView.UserMessageView(message: userMessage)
     ChatView.AssistantMessageView(message: assistantMessage)
+    ChatView.AssistantMessageView(message: assistantStatusOnlyMessage)
+    ChatView.StreamingAssistantMessageView(message: streamingStart)
+    ChatView.StreamingAssistantMessageView(message: streamingReasoning)
+    ChatView.StreamingAssistantMessageView(message: streamingToolCall)
+    ChatView.StreamingAssistantMessageView(message: streamingToolResult)
+    ChatView.StreamingAssistantMessageView(message: streamingText)
+    ChatView.StreamingAssistantMessageView(message: streamingTextOnly)
+    ChatView.StreamingAssistantMessageView(message: streamingTextThenTool)
   }
   .padding()
 }
