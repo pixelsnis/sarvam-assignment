@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "bun --watch index.ts",
     "start": "bun index.ts",
+    "test": "bun test",
     "typecheck": "tsc --noEmit",
     "auth:generate": "better-auth generate --config src/auth.ts --output src/db/schema.ts --yes",
     "db:generate": "drizzle-kit generate",
@@ -20,10 +21,13 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@ai-sdk/openai-compatible": "^3.0.39",
+    "ai": "^7",
     "better-auth": "^1.7.2",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.13.5",
     "postgres": "^3.4.9",
-    "resend": "^6.24.0"
+    "resend": "^6.24.0",
+    "zod": "^4.4.3"
   }
 }

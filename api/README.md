@@ -59,6 +59,45 @@ The email OTP lifecycle is:
 The second request can automatically create a new account when the email is
 not registered yet. Resending an OTP uses the first endpoint again.
 
+## Chat streaming
+
+Chat routes require the Better Auth session cookie. Configure the OpenAI-
+compatible Sarvam provider in `.env`:
+
+```bash
+OPENAI_BASE_URL=https://api.sarvam.ai/v1
+OPENAI_API_KEY=sk_xxxxxxxxx
+```
+
+Create an empty chat:
+
+```text
+POST /chats/new
+```
+
+The response is `201 { "id": "..." }`. Stream a turn against that chat:
+
+```text
+POST /chats/:id/stream
+```
+
+```json
+{ "text": "Help me plan my workday." }
+```
+
+The stream is Server-Sent Events. Each `data` payload is a flat JSON event:
+
+```json
+{ "type": "start", "sessionId": "..." }
+{ "type": "status", "status": "thinking" }
+{ "type": "text-delta", "text": "..." }
+{ "type": "status", "status": "complete" }
+{ "type": "end", "sessionId": "...", "finishReason": "stop" }
+```
+
+Tool events use `toolId`, `toolName`, and a UI-friendly `label`. Tools are not
+currently configured. Attachments are not accepted by this API slice.
+
 ## Run the API
 
 Development mode:
@@ -73,6 +112,8 @@ Routes:
 
 - `GET /health` — API liveness check.
 - `GET /auth/*` and `POST /auth/*` — Better Auth endpoints, including email OTP authentication.
+- `POST /chats/new` — create an authenticated chat.
+- `POST /chats/:id/stream` — stream an authenticated chat turn as SSE.
 
 Type-check the project with:
 
