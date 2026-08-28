@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { chatProviderConfig, toolLabel } from "./chats";
+import { chatProviderConfig, createChatTools, toolLabel } from "./chats";
 
 describe("chat provider configuration", () => {
   test("falls back to OPENAI environment variables", () => {
@@ -38,10 +38,20 @@ describe("chat tool labels", () => {
   test("uses friendly labels for known tools", () => {
     expect(toolLabel("read_file", false)).toBe("Reading files");
     expect(toolLabel("read_file", true)).toBe("Read files");
+    expect(toolLabel("webSearch", false)).toBe("Searching the web");
+    expect(toolLabel("webSearch", true)).toBe("Searched the web");
+    expect(toolLabel("webExtract", false)).toBe("Extracting webpage content");
+    expect(toolLabel("webExtract", true)).toBe("Extracted webpage content");
   });
 
   test("keeps unknown tool labels readable for future tools", () => {
     expect(toolLabel("search_web", false)).toBe("Using search web");
     expect(toolLabel("search_web", true)).toBe("Used search web");
+  });
+});
+
+describe("chat tools", () => {
+  test("exposes web search and web extract tools", () => {
+    expect(Object.keys(createChatTools())).toEqual(["webSearch", "webExtract"]);
   });
 });

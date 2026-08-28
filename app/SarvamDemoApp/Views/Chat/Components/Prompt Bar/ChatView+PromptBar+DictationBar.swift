@@ -59,7 +59,7 @@ extension ChatView {
     @State private var scrollPosition = ScrollPosition(idType: String.self)
 
     private let pillWidth: CGFloat = 3
-    private let pillSpacing: CGFloat = 4
+    private let pillSpacing: CGFloat = 2
     private let waveformHeight: CGFloat = 32
 
     var body: some View {

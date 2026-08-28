@@ -46,15 +46,13 @@ extension ChatView {
 
     var body: some View {
       HStack(spacing: 16) {
-        Button("Add attachment", systemImage: "plus") {
-
-        }
-
         Button("Dictate", systemImage: "mic") {
           Task {
             await viewModel.startDictation()
           }
         }
+        .frame(width: 40, height: 40)
+        .contentShape(.circle)
 
         Spacer()
 
@@ -65,9 +63,8 @@ extension ChatView {
       }
       .buttonStyle(.plain)
       .labelStyle(.iconOnly)
-      .padding(.leading, 16)
+      .padding(.horizontal, 8)
       .padding(.bottom, 8)
-      .padding(.trailing, 8)
     }
   }
 }

@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.39",
+    "@tavily/ai-sdk": "^0.5.0",
     "ai": "^7",
     "better-auth": "^1.7.2",
     "drizzle-orm": "^0.45.2",

@@ -58,6 +58,12 @@ The response contains the transcript:
 { "transcript": "नमस्ते, आप कैसे हैं?" }
 ```
 
+## Chat web tools
+
+Chat responses can use Tavily for current web information and webpage content
+extraction. Set `TAVILY_API_KEY` in the API environment. The model can call
+these tools automatically when a prompt needs web access.
+
 ## Run the API
 
 ```bash

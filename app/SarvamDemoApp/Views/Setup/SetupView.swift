@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SetupView: View {
   @State private var vm = ViewModel()
+  @Namespace private var logoNamespace
 
   private var showAllActions: Bool {
     !vm.inputFieldFocused && vm.emailOrPhone.isEmpty
@@ -14,9 +15,9 @@ struct SetupView: View {
       }
 
       if vm.stage == .intro {
-        Self.LogoLarge()
+        Self.LogoLarge(namespace: logoNamespace)
       } else {
-        Self.StepDetail()
+        Self.StepDetail(namespace: logoNamespace)
       }
 
       if showAllActions {
@@ -43,14 +44,13 @@ struct SetupView: View {
         .transition(.blurReplace)
       }
     }
-    .animation(.default, value: showAllActions)
-    .animation(.default, value: vm.stage)
+    .animation(.smooth(duration: 0.4), value: showAllActions)
+    .animation(.smooth(duration: 0.45), value: vm.stage)
     .scrollDismissesKeyboard(.interactively)
     .padding()
     .toolbar {
       Self.Toolbar()
     }
-    .animation(.default, value: vm.stage)
     .environment(vm)
   }
 }

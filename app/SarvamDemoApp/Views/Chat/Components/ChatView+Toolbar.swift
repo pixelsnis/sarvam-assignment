@@ -7,7 +7,7 @@ extension ChatView {
     var body: some ToolbarContent {
       ToolbarItem(placement: .topBarLeading) {
         Button("Sidebar", systemImage: "sidebar.left") {
-          
+          // NOTE: No-op for now
         }
       }
       

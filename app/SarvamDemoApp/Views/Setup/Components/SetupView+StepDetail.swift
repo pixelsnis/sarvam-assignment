@@ -9,6 +9,7 @@ import SwiftUI
 
 extension SetupView {
   struct StepDetail: View {
+    let namespace: Namespace.ID
     @Environment(ViewModel.self) private var viewModel
     
     private var title: String {
@@ -28,10 +29,11 @@ extension SetupView {
           .resizable()
           .scaledToFit()
           .frame(height: 32)
+          .matchedGeometryEffect(id: "setup-logo", in: namespace)
       
         VStack(alignment: .leading, spacing: 8) {
           Text(title)
-            .contentTransition(.numericText())
+            .contentTransition(.interpolate)
             // TODO: Update this to Season Mix
             .font(.title3.weight(.medium))
           
@@ -55,7 +57,7 @@ extension SetupView {
             }
           }
         }
-        .animation(.default, value: viewModel.stage)
+        .animation(.smooth(duration: 0.3), value: viewModel.stage)
       }
       .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -87,7 +89,8 @@ extension SetupView {
 #Preview {
   @Previewable @State var viewModel = SetupView.ViewModel()
   
-  SetupView.StepDetail()
+  @Previewable @Namespace var namespace
+  SetupView.StepDetail(namespace: namespace)
     .environment(viewModel)
     .onAppear {
       viewModel.stage = .otpInput

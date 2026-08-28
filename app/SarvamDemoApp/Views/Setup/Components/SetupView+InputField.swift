@@ -82,12 +82,14 @@ extension SetupView {
     let namespace: Namespace.ID
     
     @Environment(ViewModel.self) private var viewModel
+    @FocusState private var focused: Bool
     
     var body: some View {
       @Bindable var viewModel = viewModel
 
       HStack(spacing: 10) {
         TextField("XXX-XXX", text: $viewModel.otp)
+          .focused($focused)
           .onChange(of: viewModel.otp) { _, value in
             viewModel.updateOTP(value)
           }
@@ -116,6 +118,10 @@ extension SetupView {
         }
         .buttonStyle(.plain)
       }
+      .task {
+        await Task.yield()
+        focused = true
+      }
     }
   }
   
@@ -123,17 +129,23 @@ extension SetupView {
     let namespace: Namespace.ID
     
     @Environment(ViewModel.self) private var viewModel
+    @FocusState private var focused: Bool
     
     var body: some View {
       @Bindable var viewModel = viewModel
       
       HStack {
         TextField("Type here", text: $viewModel.name)
+          .focused($focused)
         
         PromptBarActionButton("Next", systemImage: "arrow.right", loading: $viewModel.isLoading) {
           await viewModel.submitName()
         }
         .disabled(viewModel.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+      }
+      .task {
+        await Task.yield()
+        focused = true
       }
       .padding(.leading, 20)
       .padding(.trailing, 8)

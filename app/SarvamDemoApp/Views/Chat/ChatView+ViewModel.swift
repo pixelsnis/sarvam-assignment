@@ -117,6 +117,7 @@ extension ChatView {
         }
       }
       text = ""
+      UIApplication.shared.dismissKeyboard()
       submissionState = chatID == nil ? .creatingChat : .streaming
       let task = Task { [weak self] in
         guard let self else { return }
@@ -141,21 +142,25 @@ extension ChatView {
         var receivedEnd = false
         for try await chunk in chats.stream(id: chatID, content: prompt) {
           try Task.checkCancellation()
-          streamChunks.append(chunk)
-          streamingAssistantMessage.chunks.append(chunk)
-          scrollRevision &+= 1
+          withAnimation(.smooth(duration: 0.18)) {
+            streamChunks.append(chunk)
+            streamingAssistantMessage.chunks.append(chunk)
+            scrollRevision &+= 1
+          }
           if case .end(let end) = chunk {
             receivedEnd = true
             if end.outcome == .failed {
               throw SubmissionError.server(end.error?.message ?? "The response failed.")
             }
-            streamChunks = []
-            streamingAssistantMessage = .init()
-            messages = end.messages
-            pendingPrompt = nil
-            pendingMessageID = nil
-            submissionState = .idle
-            scrollRevision &+= 1
+            withAnimation(.smooth(duration: 0.3)) {
+              streamChunks = []
+              streamingAssistantMessage = .init()
+              messages = end.messages
+              pendingPrompt = nil
+              pendingMessageID = nil
+              submissionState = .idle
+              scrollRevision &+= 1
+            }
           }
         }
         if !receivedEnd { throw SubmissionError.missingEnd }

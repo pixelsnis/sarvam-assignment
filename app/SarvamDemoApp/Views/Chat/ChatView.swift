@@ -16,6 +16,7 @@ struct ChatView: View {
         sarvam105BGhost()
       } else {
         Conversation()
+          .transition(.push(from: .bottom).combined(with: .blurReplace))
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)

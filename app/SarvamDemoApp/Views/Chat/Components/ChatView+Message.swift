@@ -92,12 +92,13 @@ extension ChatView {
         if let text = message.visibleTextContent {
           Text(text)
             .lineHeight(.loose)
+            .contentTransition(.interpolate)
             .transition(.blurReplace)
         }
       }
       .frame(maxWidth: .infinity, alignment: .leading)
-      .animation(.default, value: eyebrowState)
-      .animation(.default, value: message.visibleTextContent)
+      .animation(.smooth(duration: 0.22), value: eyebrowState)
+      .animation(.smooth(duration: 0.22), value: message.visibleTextContent)
     }
   }
 
@@ -140,12 +141,13 @@ extension ChatView {
         if let text = message.visibleTextContent {
           Text(text)
             .lineHeight(.loose)
+            .contentTransition(.interpolate)
             .transition(.blurReplace)
         }
       }
       .frame(maxWidth: .infinity, alignment: .leading)
-      .animation(.default, value: eyebrowState)
-      .animation(.default, value: message.visibleTextContent)
+      .animation(.smooth(duration: 0.22), value: eyebrowState)
+      .animation(.smooth(duration: 0.22), value: message.visibleTextContent)
     }
   }
 }

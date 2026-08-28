@@ -11,12 +11,17 @@ struct ContentView: View {
   @AppStorage("isLoggedIn") private var isLoggedIn = false
 
   var body: some View {
-    Group {
-      if isLoggedIn {
-        ChatView()
-      } else {
-        SetupView()
+    NavigationStack {
+      ZStack {
+        if isLoggedIn {
+          ChatView()
+            .transition(.push(from: .bottom).combined(with: .blurReplace))
+        } else {
+          SetupView()
+            .transition(.push(from: .top).combined(with: .blurReplace))
+        }
       }
+      .animation(.smooth(duration: 0.45), value: isLoggedIn)
     }
   }
 }

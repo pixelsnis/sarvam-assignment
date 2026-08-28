@@ -39,6 +39,8 @@ extension ChatView {
         .padding(.top)
         .padding(.bottom, 120)
         .scrollTargetLayout()
+        .animation(.smooth(duration: 0.22), value: viewModel.messages)
+        .animation(.smooth(duration: 0.18), value: viewModel.streamChunks)
       }
       .scrollPosition($scrollPosition)
       .onAppear { scrollPosition.scrollTo(edge: .bottom) }

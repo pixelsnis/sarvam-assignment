@@ -1,8 +1,9 @@
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { tavilyExtract, tavilySearch } from "@tavily/ai-sdk";
 import { and, asc, desc, eq } from "drizzle-orm";
 import type { Context } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import { streamText, type ModelMessage } from "ai";
+import { stepCountIs, streamText, type ModelMessage } from "ai";
 import { auth } from "./auth";
 import { db } from "./db";
 import { chat, chatMessage } from "./db/schema";
@@ -104,11 +105,20 @@ function clientMessage(row: typeof chatMessage.$inferSelect): ClientChatMessage 
 export function toolLabel(toolName: string, completed: boolean): string {
   const labels: Record<string, [string, string]> = {
     read_file: ["Reading files", "Read files"],
+    webSearch: ["Searching the web", "Searched the web"],
+    webExtract: ["Extracting webpage content", "Extracted webpage content"],
   };
   const configured = labels[toolName];
   if (configured) return configured[completed ? 1 : 0];
   const words = toolName.replaceAll("_", " ");
   return completed ? `Used ${words}` : `Using ${words}`;
+}
+
+export function createChatTools() {
+  return {
+    webSearch: tavilySearch(),
+    webExtract: tavilyExtract(),
+  };
 }
 
 export function chatProviderConfig(
@@ -227,6 +237,8 @@ export function streamChatHandler() {
       });
       const result = streamText({
         model: provider(CHAT_MODEL),
+        tools: createChatTools(),
+        stopWhen: stepCountIs(3),
         messages: [
           ...priorRows.map((row) => row.modelMessage as ModelMessage),
           userModelMessage,
@@ -333,7 +345,7 @@ export function streamChatHandler() {
             }
 
             const responseMessages = await result.responseMessages;
-            const assistantModelMessage = responseMessages.find(
+            const assistantModelMessage = responseMessages.findLast(
               (message) => message.role === "assistant",
             );
             if (!assistantModelMessage) throw new Error("Provider returned no assistant message");
