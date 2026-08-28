@@ -6,6 +6,10 @@ This project was built as a design engineering assignment. The goal was to trans
 
 **Approximately 90% of the UI was written by hand in SwiftUI, rather than generated with AI.**
 
+## Demo Screen Recording
+
+https://github.com/user-attachments/assets/4deba44d-60e6-43ce-a359-d22a2eae73ff
+
 ## What’s implemented
 
 | Area | Implemented | Status / notes |
