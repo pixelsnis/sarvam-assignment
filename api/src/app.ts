@@ -1,12 +1,12 @@
 import { Hono } from "hono";
-import { auth } from "./auth";
-import { createTranscriptionHandler } from "./transcriptions";
+import { auth } from "./features/auth";
+import { createTranscriptionHandler } from "./features/transcriptions";
 import {
   createChatHandler,
   getChatHandler,
   listChatsHandler,
   streamChatHandler,
-} from "./chats";
+} from "./features/chats";
 
 const app = new Hono();
 

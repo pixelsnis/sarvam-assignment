@@ -8,7 +8,7 @@
     "start": "bun index.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "auth:generate": "better-auth generate --config src/auth.ts --output src/db/schema.ts --yes",
+    "auth:generate": "better-auth generate --config src/features/auth/auth.ts --output src/db/schema.ts --yes",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"
   },

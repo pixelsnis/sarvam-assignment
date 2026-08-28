@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import {
   createTranscriptionHandler,
   type TranscriptionDependencies,
-} from "./transcriptions";
+} from "./index";
 
 function makeAudioFormData(
   file: File | string | null = new File(["audio"], "sample.m4a", {
@@ -36,9 +36,7 @@ function makeApp(options?: {
         return Response.json({ transcript: "नमस्ते" });
       }),
     sarvamApiKey:
-      options && "sarvamApiKey" in options
-        ? options.sarvamApiKey
-        : "sarvam-test-key",
+      options && "sarvamApiKey" in options ? options.sarvamApiKey : "sarvam-test-key",
   };
 
   app.post("/transcriptions", createTranscriptionHandler(dependencies));

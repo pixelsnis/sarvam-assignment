@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { chatProviderConfig, createChatTools, toolLabel } from "./chats";
+import { chatProviderConfig } from "./config";
+import { createChatTools, toolLabel } from "./tools";
 
 describe("chat provider configuration", () => {
   test("falls back to OPENAI environment variables", () => {
