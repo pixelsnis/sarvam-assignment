@@ -20,6 +20,16 @@ extension APIClient {
     case toolCall(ToolCallPart)
     case toolResult(ToolResultPart)
 
+    static func visibleTextContent(in parts: [Self]) -> String? {
+      guard case .text = parts.last else { return nil }
+      var text: [String] = []
+      for part in parts.reversed() {
+        guard case .text(let value) = part else { break }
+        text.append(value.text)
+      }
+      return text.reversed().joined()
+    }
+
     private enum CodingKeys: String, CodingKey { case type }
     private enum Kind: String, Codable { case text, reasoning, tool_call, toolResult = "tool-result" }
 
@@ -74,6 +84,10 @@ extension APIClient {
       switch self { case .user(let value): value.content; case .assistant(let value): value.content }
     }
 
+    var visibleTextContent: String? {
+      ChatContentPart.visibleTextContent(in: content)
+    }
+
     private enum CodingKeys: String, CodingKey { case role }
     private enum Role: String, Codable { case user, assistant }
 
@@ -98,12 +112,20 @@ extension APIClient {
     let role: String
     let content: [ChatContentPart]
     let createdAt: Date
+
+    var visibleTextContent: String? {
+      ChatContentPart.visibleTextContent(in: content)
+    }
   }
   struct AssistantMessage: Codable, Equatable, Sendable {
     let id: String
     let role: String
     let content: [ChatContentPart]
     let createdAt: Date
+
+    var visibleTextContent: String? {
+      ChatContentPart.visibleTextContent(in: content)
+    }
   }
 
   enum ChatStreamChunk: Codable, Equatable, Sendable {
@@ -138,6 +160,28 @@ extension APIClient {
       case .toolResult(let value): try value.encode(to: encoder)
       case .end(let value): try value.encode(to: encoder)
       }
+    }
+
+    static func visibleTextContent(in chunks: [Self]) -> String? {
+      guard case .textDelta = chunks.last else { return nil }
+      var text: [String] = []
+      for chunk in chunks.reversed() {
+        guard case .textDelta(let value) = chunk else { break }
+        text.append(value.delta)
+      }
+      return text.reversed().joined()
+    }
+  }
+
+  struct StreamingAssistantMessage: Equatable, Sendable {
+    var chunks: [ChatStreamChunk]
+
+    init(chunks: [ChatStreamChunk] = []) {
+      self.chunks = chunks
+    }
+
+    var visibleTextContent: String? {
+      ChatStreamChunk.visibleTextContent(in: chunks)
     }
   }
 

@@ -10,6 +10,7 @@ extension APIClient {
     let id: String
     var messages: [ChatMessage] = []
     var streamChunks: [ChatStreamChunk] = []
+    var streamingAssistantMessage = StreamingAssistantMessage()
     var state: State = .idle
     var errorMessage: String?
 
@@ -39,6 +40,7 @@ extension APIClient {
     func send(_ content: String) async {
       guard streamTask == nil, !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
       streamChunks = []
+      streamingAssistantMessage = StreamingAssistantMessage()
       errorMessage = nil
       state = .streaming
       let task = Task { [weak self] in
@@ -47,6 +49,7 @@ extension APIClient {
           for try await chunk in chats.stream(id: id, content: content) {
             if Task.isCancelled { return }
             streamChunks.append(chunk)
+            streamingAssistantMessage.chunks.append(chunk)
             if case .end(let end) = chunk {
               messages = end.messages
               if end.outcome == .failed {
