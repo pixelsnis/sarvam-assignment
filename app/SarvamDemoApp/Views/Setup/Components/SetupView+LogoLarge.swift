@@ -1,3 +1,4 @@
+// SetupView+LogoLarge: UI and service logic for this feature.
 //
 //  SetupView+LogoLarge.swift
 //  SarvamDemoApp
@@ -7,7 +8,9 @@
 
 import SwiftUI
 
+// Defines SetupView.
 extension SetupView {
+  // Defines LogoLarge.
   struct LogoLarge: View {
     let namespace: Namespace.ID
 

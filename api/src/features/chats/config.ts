@@ -1,5 +1,7 @@
+// config: project logic for this module.
 import type { ChatProviderConfig, ChatProviderEnvironment } from "./types";
 
+// Exports chatProviderConfig.
 export function chatProviderConfig(
   environment?: ChatProviderEnvironment,
 ): ChatProviderConfig | null {

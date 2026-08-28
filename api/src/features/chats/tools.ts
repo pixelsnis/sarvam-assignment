@@ -1,5 +1,7 @@
+// tools: project logic for this module.
 import { tavilyExtract, tavilySearch } from "@tavily/ai-sdk";
 
+// Exports toolLabel.
 export function toolLabel(toolName: string, completed: boolean): string {
   const labels: Record<string, [string, string]> = {
     read_file: ["Reading files", "Read files"],
@@ -12,6 +14,7 @@ export function toolLabel(toolName: string, completed: boolean): string {
   return completed ? `Used ${words}` : `Using ${words}`;
 }
 
+// Exports createChatTools.
 export function createChatTools() {
   return {
     webSearch: tavilySearch(),

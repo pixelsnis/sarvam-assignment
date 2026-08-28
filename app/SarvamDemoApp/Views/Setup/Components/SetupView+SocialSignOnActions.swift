@@ -1,3 +1,4 @@
+// SetupView+SocialSignOnActions: UI and service logic for this feature.
 //
 //  SetupView+SocialSignOnActions.swift
 //  SarvamDemoApp
@@ -7,7 +8,9 @@
 
 import SwiftUI
 
+// Defines SetupView.
 extension SetupView {
+  // Defines SocialSignOnActions.
   struct SocialSignOnActions: View {
     @Environment(ViewModel.self) private var viewModel
     
@@ -19,6 +22,7 @@ extension SetupView {
     }
   }
   
+  // Defines GoogleSignInButton.
   private struct GoogleSignInButton: View {
     @Environment(ViewModel.self) private var viewModel
     
@@ -44,6 +48,7 @@ extension SetupView {
     }
   }
   
+  // Defines AppleSignInButton.
   private struct AppleSignInButton: View {
     @Environment(ViewModel.self) private var viewModel
     

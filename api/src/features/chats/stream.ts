@@ -1,8 +1,10 @@
+// stream: project logic for this module.
 import { streamText, type StreamTextResult, type ToolSet } from "ai";
 import { clientMessage, saveAssistantMessage, type ChatMessageRow } from "./repository";
 import { toolLabel } from "./tools";
 import type { ChatContentPart, ChatStreamChunk } from "./types";
 
+// Defines ndjson.
 function ndjson(chunk: ChatStreamChunk): Uint8Array {
   return new TextEncoder().encode(`${JSON.stringify(chunk)}\n`);
 }
@@ -14,6 +16,7 @@ type ChatStreamOptions<TOOLS extends ToolSet> = {
   userRow: ChatMessageRow;
 };
 
+// Exports createChatStream.
 export function createChatStream<TOOLS extends ToolSet>({
   result,
   assistantId,
@@ -22,6 +25,7 @@ export function createChatStream<TOOLS extends ToolSet>({
 }: ChatStreamOptions<TOOLS>): ReadableStream<Uint8Array> {
   return new ReadableStream<Uint8Array>({
     async start(controller) {
+      // 1. Track provider parts while announcing the assistant message.
       const content: ChatContentPart[] = [];
       const partIndexes = new Map<string, number>();
       const reasoningStarted = new Map<string, number>();
@@ -30,6 +34,7 @@ export function createChatStream<TOOLS extends ToolSet>({
 
       try {
         for await (const part of result.fullStream) {
+          // 2. Forward deltas and collect the complete assistant content.
           switch (part.type) {
             case "reasoning-start":
               reasoningStarted.set(part.id, performance.now());
@@ -122,6 +127,7 @@ export function createChatStream<TOOLS extends ToolSet>({
         }
 
         const responseMessages = await result.responseMessages;
+        // 3. Persist the completed response before sending the final event.
         const assistantModelMessage = responseMessages.findLast(
           (message) => message.role === "assistant",
         );

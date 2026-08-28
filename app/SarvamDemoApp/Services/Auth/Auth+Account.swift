@@ -1,6 +1,9 @@
+// Auth+Account: UI and service logic for this feature.
 import Foundation
 
+// Defines Auth.
 extension Auth {
+  // Handles requestOTP.
   func requestOTP(email: String) async throws {
     print("[App:Auth] Requesting OTP")
     setLoading(true)
@@ -15,6 +18,7 @@ extension Auth {
     }
   }
 
+  // Handles resendOTP.
   func resendOTP(email: String) async throws {
     print("[App:Auth] Resending OTP")
     setLoading(true)
@@ -29,6 +33,7 @@ extension Auth {
     }
   }
 
+  // Handles verifyOTP.
   func verifyOTP(
     email: String,
     otp: String
@@ -53,6 +58,7 @@ extension Auth {
     }
   }
 
+  // Handles updateUser.
   func updateUser(name: String) async throws {
     print("[App:Auth] Updating user")
     setLoading(true)

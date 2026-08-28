@@ -1,3 +1,4 @@
+// APIEndpointDiscovery: UI and service logic for this feature.
 import Foundation
 
 @MainActor
@@ -15,11 +16,13 @@ final class APIEndpointDiscovery: NSObject {
     browser.delegate = self
   }
 
+  // Handles start.
   func start() {
     print("[App:Discovery] Search started")
     browser.searchForServices(ofType: Self.serviceType, inDomain: "local.")
   }
 
+  // Handles stop.
   func stop() {
     print("[App:Discovery] Search stopped")
     browser.stop()
@@ -28,6 +31,7 @@ final class APIEndpointDiscovery: NSObject {
     resolvedService = nil
   }
 
+  // Handles resolve.
   private func resolve(_ service: NetService) {
     resolvedService?.stop()
     resolvedService = service
@@ -36,6 +40,7 @@ final class APIEndpointDiscovery: NSObject {
   }
 }
 
+// Defines APIEndpointDiscovery.
 extension APIEndpointDiscovery: NetServiceBrowserDelegate {
   nonisolated func netServiceBrowser(
     _ browser: NetServiceBrowser,
@@ -68,6 +73,7 @@ extension APIEndpointDiscovery: NetServiceBrowserDelegate {
   }
 }
 
+// Defines APIEndpointDiscovery.
 extension APIEndpointDiscovery: NetServiceDelegate {
   nonisolated func netServiceDidResolveAddress(_ sender: NetService) {
     guard let host = sender.hostName else { return }

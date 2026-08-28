@@ -1,3 +1,4 @@
+// handlers: project logic for this module.
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import type { Context } from "hono";
 import { stepCountIs, streamText, type ModelMessage } from "ai";
@@ -17,9 +18,11 @@ import { createChatTools } from "./tools";
 
 const CHAT_MODEL = "sarvam-105b";
 
+// Exports createChatHandler.
 export function createChatHandler() {
   return async (c: Context): Promise<Response> => {
     try {
+      // 1. Authenticate the caller and create an empty chat.
       console.log("[API:Chat] Creating chat");
       const user = await authenticatedUser(c);
       const created = await createChat(user.id);
@@ -31,9 +34,11 @@ export function createChatHandler() {
   };
 }
 
+// Exports listChatsHandler.
 export function listChatsHandler() {
   return async (c: Context): Promise<Response> => {
     try {
+      // 1. Authenticate the caller before loading private chat data.
       console.log("[API:Chat] Listing chats");
       const user = await authenticatedUser(c);
       return c.json({ chats: await listChats(user.id) });
@@ -43,9 +48,11 @@ export function listChatsHandler() {
   };
 }
 
+// Exports getChatHandler.
 export function getChatHandler() {
   return async (c: Context): Promise<Response> => {
     try {
+      // 1. Verify ownership, then load the chat and its messages.
       console.log("[API:Chat] Loading chat");
       const user = await authenticatedUser(c);
       const value = await ownedChat(c.req.param("id"), user.id);
@@ -62,9 +69,11 @@ export function getChatHandler() {
   };
 }
 
+// Exports streamChatHandler.
 export function streamChatHandler() {
   return async (c: Context): Promise<Response> => {
     try {
+      // 1. Authenticate and validate the requested chat and prompt.
       console.log("[API:Chat] Starting stream");
       const user = await authenticatedUser(c);
       const value = await ownedChat(c.req.param("id"), user.id);
@@ -88,6 +97,7 @@ export function streamChatHandler() {
       const userModelMessage: ModelMessage = { role: "user", content: prompt };
       const userRow = await createUserMessage(value.id, prompt, userModelMessage);
 
+      // 2. Configure the provider and start the model stream.
       const assistantId = crypto.randomUUID();
       const provider = createOpenAICompatible({
         name: "sarvam",
@@ -106,6 +116,7 @@ export function streamChatHandler() {
       });
       console.log("[API:Chat] Provider stream started");
 
+      // 3. Convert provider events into the client-facing NDJSON stream.
       const stream = createChatStream({
         result,
         assistantId,

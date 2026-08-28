@@ -1,10 +1,13 @@
+// ChatSession: UI and service logic for this feature.
 import Foundation
 import Observation
 
+// Defines APIClient.
 extension APIClient {
   @MainActor
   @Observable
   final class ChatSession {
+    // Defines State.
     enum State: Equatable, Sendable { case idle, streaming, completed, failed }
 
     let id: String
@@ -27,6 +30,7 @@ extension APIClient {
       self.chats = chats
     }
 
+    // Handles load.
     func load() async {
       print("[App:ChatSession] Loading messages")
       do {
@@ -39,6 +43,7 @@ extension APIClient {
       }
     }
 
+    // Handles send.
     func send(_ content: String) async {
       print("[App:ChatSession] Sending message")
       guard streamTask == nil, !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
@@ -76,6 +81,7 @@ extension APIClient {
       await task.value
     }
 
+    // Handles cancel.
     func cancel() {
       print("[App:ChatSession] Cancelling stream")
       streamTask?.cancel()

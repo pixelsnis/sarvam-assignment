@@ -1,12 +1,16 @@
+// APIClient+ChatModels: UI and service logic for this feature.
 import Foundation
 
+// Defines APIClient.
 extension APIClient {
+  // Defines ChatSummary.
   struct ChatSummary: Codable, Equatable, Identifiable, Sendable {
     let id: String
     let createdAt: Date
     let updatedAt: Date
   }
 
+  // Defines Chat.
   struct Chat: Codable, Equatable, Identifiable, Sendable {
     let id: String
     let createdAt: Date
@@ -14,12 +18,14 @@ extension APIClient {
     let messages: [ChatMessage]
   }
 
+  // Defines ChatContentPart.
   enum ChatContentPart: Codable, Equatable, Sendable {
     case text(TextPart)
     case reasoning(ReasoningPart)
     case toolCall(ToolCallPart)
     case toolResult(ToolResultPart)
 
+    // Handles visibleTextContent.
     static func visibleTextContent(in parts: [Self]) -> String? {
       guard case .text = parts.last else { return nil }
       var text: [String] = []
@@ -30,7 +36,9 @@ extension APIClient {
       return text.reversed().joined()
     }
 
+    // Defines CodingKeys.
     private enum CodingKeys: String, CodingKey { case type }
+    // Defines Kind.
     private enum Kind: String, Codable { case text, reasoning, tool_call, toolResult = "tool-result" }
 
     init(from decoder: Decoder) throws {
@@ -43,6 +51,7 @@ extension APIClient {
       }
     }
 
+    // Handles encode.
     func encode(to encoder: Encoder) throws {
       switch self {
       case .text(let value): try value.encode(to: encoder)
@@ -53,18 +62,22 @@ extension APIClient {
     }
   }
 
+  // Defines TextPart.
   struct TextPart: Codable, Equatable, Sendable { let type: String; let text: String }
+  // Defines ReasoningPart.
   struct ReasoningPart: Codable, Equatable, Sendable {
     let type: String
     let reasoning: String
     let duration: Double
   }
+  // Defines ToolCallPart.
   struct ToolCallPart: Codable, Equatable, Sendable {
     let type: String
     let toolCallId: String
     let toolName: String
     let label: String
   }
+  // Defines ToolResultPart.
   struct ToolResultPart: Codable, Equatable, Sendable {
     let type: String
     let toolCallId: String
@@ -72,6 +85,7 @@ extension APIClient {
     let label: String
   }
 
+  // Defines ChatMessage.
   enum ChatMessage: Codable, Equatable, Identifiable, Sendable {
     case user(UserMessage)
     case assistant(AssistantMessage)
@@ -88,7 +102,9 @@ extension APIClient {
       ChatContentPart.visibleTextContent(in: content)
     }
 
+    // Defines CodingKeys.
     private enum CodingKeys: String, CodingKey { case role }
+    // Defines Role.
     private enum Role: String, Codable { case user, assistant }
 
     init(from decoder: Decoder) throws {
@@ -99,6 +115,7 @@ extension APIClient {
       }
     }
 
+    // Handles encode.
     func encode(to encoder: Encoder) throws {
       switch self {
       case .user(let value): try value.encode(to: encoder)
@@ -107,6 +124,7 @@ extension APIClient {
     }
   }
 
+  // Defines UserMessage.
   struct UserMessage: Codable, Equatable, Sendable {
     let id: String
     let role: String
@@ -117,6 +135,7 @@ extension APIClient {
       ChatContentPart.visibleTextContent(in: content)
     }
   }
+  // Defines AssistantMessage.
   struct AssistantMessage: Codable, Equatable, Sendable {
     let id: String
     let role: String
@@ -128,6 +147,7 @@ extension APIClient {
     }
   }
 
+  // Defines ChatStreamChunk.
   enum ChatStreamChunk: Codable, Equatable, Sendable {
     case start(StartChunk)
     case reasoningDelta(ReasoningDeltaChunk)
@@ -136,7 +156,9 @@ extension APIClient {
     case toolResult(StreamToolResultChunk)
     case end(EndChunk)
 
+    // Defines CodingKeys.
     private enum CodingKeys: String, CodingKey { case type }
+    // Defines Kind.
     private enum Kind: String, Codable { case start, reasoningDelta = "reasoning-delta", textDelta = "text-delta", toolCall = "tool-call", toolResult = "tool-result", end }
 
     init(from decoder: Decoder) throws {
@@ -151,6 +173,7 @@ extension APIClient {
       }
     }
 
+    // Handles encode.
     func encode(to encoder: Encoder) throws {
       switch self {
       case .start(let value): try value.encode(to: encoder)
@@ -162,6 +185,7 @@ extension APIClient {
       }
     }
 
+    // Handles visibleTextContent.
     static func visibleTextContent(in chunks: [Self]) -> String? {
       guard case .textDelta = chunks.last else { return nil }
       var text: [String] = []
@@ -173,6 +197,7 @@ extension APIClient {
     }
   }
 
+  // Defines StreamingAssistantMessage.
   struct StreamingAssistantMessage: Equatable, Sendable {
     var chunks: [ChatStreamChunk]
 
@@ -185,11 +210,17 @@ extension APIClient {
     }
   }
 
+  // Defines StartChunk.
   struct StartChunk: Codable, Equatable, Sendable { let type: String; let messageId: String }
+  // Defines ReasoningDeltaChunk.
   struct ReasoningDeltaChunk: Codable, Equatable, Sendable { let type: String; let delta: String }
+  // Defines TextDeltaChunk.
   struct TextDeltaChunk: Codable, Equatable, Sendable { let type: String; let delta: String }
+  // Defines StreamToolCallChunk.
   struct StreamToolCallChunk: Codable, Equatable, Sendable { let type: String; let toolCallId: String; let toolName: String; let label: String }
+  // Defines StreamToolResultChunk.
   struct StreamToolResultChunk: Codable, Equatable, Sendable { let type: String; let toolCallId: String; let toolName: String; let label: String }
+  // Defines EndChunk.
   struct EndChunk: Codable, Equatable, Sendable {
     let type: String
     let outcome: Outcome
@@ -197,7 +228,9 @@ extension APIClient {
     let messages: [ChatMessage]
     let error: StreamError?
 
+    // Defines Outcome.
     enum Outcome: String, Codable, Sendable { case complete, failed }
+    // Defines StreamError.
     struct StreamError: Codable, Equatable, Sendable { let code: String; let message: String }
   }
 }

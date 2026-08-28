@@ -1,3 +1,4 @@
+// SetupView+Toolbar: UI and service logic for this feature.
 //
 //  SetupView+Toolbar.swift
 //  SarvamDemoApp
@@ -7,7 +8,9 @@
 
 import SwiftUI
 
+// Defines SetupView.
 extension SetupView {
+  // Defines Toolbar.
   struct Toolbar: ToolbarContent {
     @Environment(ViewModel.self) private var viewModel
     

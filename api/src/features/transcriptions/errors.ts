@@ -1,3 +1,4 @@
+// errors: project logic for this module.
 import type { Context } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
@@ -12,6 +13,7 @@ export class TranscriptionHttpError extends Error {
   }
 }
 
+// Exports errorResponse.
 export function errorResponse(c: Context, error: unknown): Response {
   if (!(error instanceof TranscriptionHttpError)) {
     console.error("[API:Transcription] Request failed", error);

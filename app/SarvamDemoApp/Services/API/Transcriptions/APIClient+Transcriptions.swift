@@ -1,7 +1,9 @@
+// APIClient+Transcriptions: UI and service logic for this feature.
 import Alamofire
 import Foundation
 import UniformTypeIdentifiers
 
+// Defines APIClient.
 extension APIClient.Transcriptions {
   /// Transcribes the audio file at the specified URL.
   ///

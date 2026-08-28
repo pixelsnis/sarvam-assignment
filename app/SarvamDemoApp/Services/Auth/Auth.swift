@@ -1,3 +1,4 @@
+// Auth: UI and service logic for this feature.
 import Foundation
 import Observation
 
@@ -25,6 +26,7 @@ final class Auth {
     self.apiClient = apiClient
   }
 
+  // Handles apply.
   func apply(_ authSession: APIClient.AuthSession?) {
     print("[App:Auth] Applying session state")
     guard let authSession else {
@@ -39,15 +41,18 @@ final class Auth {
     session = authSession.session
   }
 
+  // Handles clearError.
   func clearError() {
     errorMessage = nil
   }
 
+  // Handles record.
   func record(error: Error) {
     print("[App:Auth] Error recorded")
     errorMessage = error.localizedDescription
   }
 
+  // Handles setLoading.
   func setLoading(_ isLoading: Bool) {
     self.isLoading = isLoading
   }

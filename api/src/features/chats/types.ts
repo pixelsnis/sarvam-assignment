@@ -1,3 +1,4 @@
+// types: project logic for this module.
 export type ChatProviderEnvironment = {
   CHAT_BASE_URL?: string;
   CHAT_API_KEY?: string;

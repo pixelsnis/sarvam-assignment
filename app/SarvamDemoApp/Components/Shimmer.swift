@@ -1,3 +1,4 @@
+// Shimmer: UI and service logic for this feature.
 //
 //  Shimmer.swift
 //  SwiftUI-Shimmer
@@ -8,6 +9,7 @@ import SwiftUI
 
 /// A view modifier that applies an animated "shimmer" to any view, typically to show that an operation is in progress.
 public struct Shimmer: ViewModifier {
+  // Defines Mode.
   public enum Mode {
     /// Masks the content with the gradient (this is the usual, default mode).
     case mask
@@ -90,6 +92,7 @@ public struct Shimmer: ViewModifier {
     }
   }
 
+  // Handles body.
   public func body(content: Content) -> some View {
     applyingGradient(to: content)
       .animation(animation, value: isInitialState)
@@ -103,6 +106,7 @@ public struct Shimmer: ViewModifier {
   }
 
   @ViewBuilder
+  // Handles applyingGradient.
   public func applyingGradient(to content: Content) -> some View {
     let gradient = LinearGradient(gradient: gradient, startPoint: startPoint, endPoint: endPoint)
 
@@ -117,6 +121,7 @@ public struct Shimmer: ViewModifier {
   }
 }
 
+// Defines View.
 public extension View {
   /// Adds an animated shimmering effect to any view, typically to show that an operation is in progress.
   /// - Parameters:
@@ -126,6 +131,7 @@ public extension View {
   ///   - bandSize: The size of the animated mask's "band". Defaults to 0.3 unit points, which corresponds to
   /// 20% of the extent of the gradient.
   @ViewBuilder
+  // Handles shimmering.
   func shimmering(
     active: Bool = true,
     animation: Animation = Shimmer.defaultAnimation,
@@ -148,6 +154,7 @@ public extension View {
   ///   - delay:A delay in seconds. Defaults to `0.25`.
   @available(*, deprecated, message: "Use shimmering(active:animation:gradient:bandSize:) instead.")
   @ViewBuilder
+  // Handles shimmering.
   func shimmering(
     active: Bool = true,
     duration: Double,

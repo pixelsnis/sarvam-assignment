@@ -1,6 +1,8 @@
+// APIClient+Chats: UI and service logic for this feature.
 import Alamofire
 import Foundation
 
+// Defines APIClient.
 extension APIClient {
   static var chats: Chats { shared.chatsAPI }
 
@@ -13,23 +15,27 @@ extension APIClient {
       self.session = Alamofire.Session(configuration: client.session.configuration)
     }
 
+    // Handles create.
     func create() async throws -> String {
       print("[App:ChatAPI] Creating chat")
       let response: CreateResponse = try await client.perform(path: "chats/new", method: .post)
       return response.id
     }
 
+    // Handles list.
     func list() async throws -> [ChatSummary] {
       print("[App:ChatAPI] Listing chats")
       let response: ListResponse = try await client.perform(path: "chats/list", method: .get)
       return response.chats
     }
 
+    // Handles get.
     func get(id: String) async throws -> Chat {
       print("[App:ChatAPI] Loading chat")
       return try await client.perform(path: "chats/\(id)", method: .get)
     }
 
+    // Handles stream.
     func stream(id: String, content: String) -> AsyncThrowingStream<ChatStreamChunk, Error> {
       print("[App:ChatAPI] Starting stream")
       return AsyncThrowingStream { continuation in
@@ -67,9 +73,13 @@ extension APIClient {
       }
     }
 
+    // Defines CreateResponse.
     private struct CreateResponse: Decodable { let id: String }
+    // Defines ListResponse.
     private struct ListResponse: Decodable { let chats: [ChatSummary] }
+    // Defines StreamRequest.
     private struct StreamRequest: Encodable { let content: String }
+    // Defines StreamDecodeError.
     private enum StreamDecodeError: Error { case trailingData }
   }
 }

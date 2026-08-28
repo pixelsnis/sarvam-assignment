@@ -1,15 +1,20 @@
+// SetupView+ViewModel: UI and service logic for this feature.
 import Foundation
 
+// Defines SetupView.
 extension SetupView {
+  // Defines SetupStage.
   enum SetupStage {
     case intro, otpInput, createAccount
   }
 
+  // Defines PhoneNumber.
   struct PhoneNumber {
     let countryCode: Int
     let phoneNumber: Int
   }
   
+  // Defines InputContentType.
   enum InputContentType {
     case email
     case phone(number: PhoneNumber)
@@ -88,7 +93,9 @@ extension SetupView {
       return emailOrPhone.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 
+    // Handles submitEmail.
     func submitEmail() async {
+      // 1. Validate and normalize the email before requesting an OTP.
       print("[App:SetupVM] Submitting email")
       guard let email = normalizedEmail else { return }
 
@@ -106,7 +113,9 @@ extension SetupView {
       }
     }
 
+    // Handles resendOTP.
     func resendOTP() async {
+      // 1. Enforce the cooldown, then request a replacement OTP.
       print("[App:SetupVM] Resending OTP")
       guard let email = normalizedEmail, resendSecondsRemaining == 0, !isLoading else { return }
 
@@ -123,6 +132,7 @@ extension SetupView {
       }
     }
 
+    // Handles updateOTP.
     func updateOTP(_ value: String) {
       let digits = value.filter(\.isNumber)
       otp = String(digits.prefix(6))
@@ -131,7 +141,9 @@ extension SetupView {
       Task { await verifyOTP() }
     }
 
+    // Handles verifyOTP.
     func verifyOTP() async {
+      // 1. Verify the code and either finish sign-in or request a name.
       print("[App:SetupVM] Verifying OTP")
       guard let email = normalizedEmail, otp.count == 6, !isLoading else { return }
 
@@ -154,7 +166,9 @@ extension SetupView {
       }
     }
 
+    // Handles submitName.
     func submitName() async {
+      // 1. Validate the name, save it, and mark the user as logged in.
       print("[App:SetupVM] Submitting name")
       guard isNameValid else {
         error = "Alphabets and accents only."
@@ -173,6 +187,7 @@ extension SetupView {
       }
     }
 
+    // Handles goBack.
     func goBack() {
       print("[App:SetupVM] Navigating back")
       switch stage {
@@ -186,12 +201,14 @@ extension SetupView {
       }
     }
 
+    // Handles runLoading.
     private func runLoading(_ operation: () async -> Void) async {
       isLoading = true
       defer { isLoading = false }
       await operation()
     }
 
+    // Handles showInvalidOTP.
     private func showInvalidOTP() {
       otp = ""
       error = "Invalid OTP."
@@ -203,7 +220,9 @@ extension SetupView {
       }
     }
 
+    // Handles startResendCooldown.
     private func startResendCooldown() {
+      // 1. Cancel the old countdown and publish the remaining seconds.
       resendTask?.cancel()
       resendSecondsRemaining = 30
       resendTask = Task { [weak self] in
@@ -215,6 +234,7 @@ extension SetupView {
       }
     }
 
+    // Handles cancelTasks.
     private func cancelTasks() {
       resendTask?.cancel()
       resendTask = nil

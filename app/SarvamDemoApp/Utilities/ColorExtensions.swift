@@ -1,3 +1,4 @@
+// ColorExtensions: UI and service logic for this feature.
 //
 //  ColorExtensions.swift
 //  SarvamDemoApp
@@ -7,6 +8,7 @@
 
 import SwiftUI
 
+// Defines Color.
 extension Color {
   init(hex: String) {
     let value = hex

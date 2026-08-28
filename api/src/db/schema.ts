@@ -1,3 +1,4 @@
+// schema: project logic for this module.
 import { relations } from "drizzle-orm";
 import {
   boolean,

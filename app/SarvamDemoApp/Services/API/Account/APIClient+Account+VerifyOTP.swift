@@ -1,12 +1,16 @@
+// APIClient+Account+VerifyOTP: UI and service logic for this feature.
 import Foundation
 
+// Defines APIClient.
 extension APIClient.Account {
+  // Defines VerifyOTPPayload.
   private struct VerifyOTPPayload: Encodable {
     let email: String
     let otp: String
     let name: String?
   }
 
+  // Handles verifyOTP.
   func verifyOTP(
     email: String,
     otp: String

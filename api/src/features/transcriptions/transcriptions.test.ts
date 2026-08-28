@@ -1,3 +1,4 @@
+// transcriptions.test: project logic for this module.
 import { describe, expect, test } from "bun:test";
 import { Hono } from "hono";
 import {
@@ -5,6 +6,7 @@ import {
   type TranscriptionDependencies,
 } from "./index";
 
+// Defines makeAudioFormData.
 function makeAudioFormData(
   file: File | string | null = new File(["audio"], "sample.m4a", {
     type: "audio/mp4",
@@ -17,6 +19,7 @@ function makeAudioFormData(
   return formData;
 }
 
+// Defines makeApp.
 function makeApp(options?: {
   authenticated?: boolean;
   sarvamApiKey?: string;

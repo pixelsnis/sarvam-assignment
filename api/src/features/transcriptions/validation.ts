@@ -1,7 +1,10 @@
+// validation: project logic for this module.
 import type { Context } from "hono";
 import { TranscriptionHttpError } from "./errors";
 
+// Exports getAudioFile.
 export async function getAudioFile(c: Context): Promise<File> {
+  // 1. Parse the multipart form and require a non-empty audio file.
   let formData: FormData;
 
   try {
@@ -34,6 +37,7 @@ export async function getAudioFile(c: Context): Promise<File> {
   return file;
 }
 
+// Exports isTranscriptionPayload.
 export function isTranscriptionPayload(
   payload: unknown,
 ): payload is { transcript: string } {

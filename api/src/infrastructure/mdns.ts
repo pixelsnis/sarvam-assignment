@@ -1,3 +1,4 @@
+// mdns: project logic for this module.
 import dgram from "node:dgram";
 import os from "node:os";
 
@@ -6,6 +7,7 @@ const multicastPort = 5353;
 const serviceType = "_sarvam-api._tcp.local";
 const serviceName = "Sarvam API";
 
+// Defines encodeName.
 function encodeName(name: string): Buffer {
   const labels = name.split(".");
   const parts = labels.map((label) => {
@@ -15,18 +17,21 @@ function encodeName(name: string): Buffer {
   return Buffer.concat([...parts, Buffer.from([0])]);
 }
 
+// Defines uint16.
 function uint16(value: number): Buffer {
   const buffer = Buffer.alloc(2);
   buffer.writeUInt16BE(value);
   return buffer;
 }
 
+// Defines uint32.
 function uint32(value: number): Buffer {
   const buffer = Buffer.alloc(4);
   buffer.writeUInt32BE(value);
   return buffer;
 }
 
+// Defines record.
 function record(name: string, type: number, ttl: number, data: Buffer): Buffer {
   return Buffer.concat([
     encodeName(name),
@@ -38,6 +43,7 @@ function record(name: string, type: number, ttl: number, data: Buffer): Buffer {
   ]);
 }
 
+// Defines localIPv4Address.
 function localIPv4Address(): string | undefined {
   for (const interfaces of Object.values(os.networkInterfaces())) {
     for (const networkInterface of interfaces ?? []) {
@@ -49,6 +55,7 @@ function localIPv4Address(): string | undefined {
   return undefined;
 }
 
+// Defines announcement.
 function announcement(port: number): Buffer {
   const instance = `${serviceName}.${serviceType}`;
   const hostname = `${os.hostname().split(".")[0]}.local`;
@@ -81,6 +88,7 @@ function announcement(port: number): Buffer {
   ]);
 }
 
+// Exports startMDNSBroadcast.
 export function startMDNSBroadcast(port: number): () => void {
   const socket = dgram.createSocket({ type: "udp4", reuseAddr: true });
   const packet = announcement(port);

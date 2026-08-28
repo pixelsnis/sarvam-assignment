@@ -1,3 +1,4 @@
+// app: project logic for this module.
 import { Hono } from "hono";
 import { auth } from "./features/auth";
 import { createTranscriptionHandler } from "./features/transcriptions";

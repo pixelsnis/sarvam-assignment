@@ -1,5 +1,7 @@
+// SetupView: UI and service logic for this feature.
 import SwiftUI
 
+// Defines SetupView.
 struct SetupView: View {
   @State private var vm = ViewModel()
   @Namespace private var logoNamespace

@@ -1,3 +1,4 @@
+// SetupView+InputField: UI and service logic for this feature.
 //
 //  SetupView+InputField.swift
 //  SarvamDemoApp
@@ -7,7 +8,9 @@
 
 import SwiftUI
 
+// Defines SetupView.
 extension SetupView {
+  // Defines InputField.
   struct InputField: View {
     @Environment(ViewModel.self) private var viewModel
     
@@ -28,6 +31,7 @@ extension SetupView {
     }
   }
   
+  // Defines EmailOrPhoneField.
   private struct EmailOrPhoneField: View {
     let namespace: Namespace.ID
     
@@ -78,6 +82,7 @@ extension SetupView {
     }
   }
   
+  // Defines OTPField.
   private struct OTPField: View {
     let namespace: Namespace.ID
     
@@ -125,6 +130,7 @@ extension SetupView {
     }
   }
   
+  // Defines NameField.
   private struct NameField: View {
     let namespace: Namespace.ID
     

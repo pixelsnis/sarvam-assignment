@@ -1,3 +1,4 @@
+// types: project logic for this module.
 export type TranscriptionUser = { user: { id: string } };
 
 export type TranscriptionFetcher = (

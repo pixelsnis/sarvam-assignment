@@ -1,6 +1,9 @@
+// ChatView+PromptBar+DictationBar: UI and service logic for this feature.
 import SwiftUI
 
+// Defines ChatView.
 extension ChatView {
+  // Defines DictationBar.
   struct DictationBar: View {
     let namespace: Namespace.ID
 
@@ -36,6 +39,7 @@ extension ChatView {
     }
   }
 
+  // Defines CancelButton.
   private struct CancelButton: View {
     let action: () -> Void
 
@@ -53,6 +57,7 @@ extension ChatView {
     }
   }
 
+  // Defines WaveformView.
   private struct WaveformView: View {
     let waveform: [Float]
 
@@ -100,6 +105,7 @@ extension ChatView {
       .frame(maxWidth: .infinity)
     }
 
+    // Handles fillerCount.
     private func fillerCount(for availableWidth: CGFloat) -> Int {
       guard availableWidth > 0 else { return 0 }
 

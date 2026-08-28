@@ -1,3 +1,4 @@
+// chats.test: project logic for this module.
 import { describe, expect, test } from "bun:test";
 import { chatProviderConfig } from "./config";
 import { createChatTools, toolLabel } from "./tools";

@@ -1,17 +1,21 @@
+// ChatView+ViewModel: UI and service logic for this feature.
 import Foundation
 import Observation
 import SwiftUI
 
+// Defines ChatView.
 extension ChatView {
   @MainActor
   @Observable
   final class ViewModel {
+    // Defines DictationState.
     enum DictationState: Equatable {
       case idle
       case recording
       case transcribing
     }
 
+    // Defines SubmissionState.
     enum SubmissionState: Equatable {
       case idle
       case creatingChat
@@ -90,7 +94,9 @@ extension ChatView {
       transcriptionTask?.cancel()
     }
 
+    // Handles submit.
     func submit() async {
+      // 1. Validate the prompt and show it immediately in the conversation.
       print("[App:ChatVM] Submitting prompt")
       let prompt = text.trimmingCharacters(in: .whitespacesAndNewlines)
       guard !prompt.isEmpty, !submissionState.isBusy else { return }
@@ -118,6 +124,7 @@ extension ChatView {
       }
       text = ""
       UIApplication.shared.dismissKeyboard()
+      // 2. Start the asynchronous chat creation or streaming operation.
       submissionState = chatID == nil ? .creatingChat : .streaming
       let task = Task { [weak self] in
         guard let self else { return }
@@ -126,7 +133,9 @@ extension ChatView {
       submissionTask = task
     }
 
+    // Handles performSubmission.
     private func performSubmission(_ prompt: String) async {
+      // 1. Create a chat when needed, then consume its response stream.
       print("[App:ChatVM] Processing submission")
       defer { submissionTask = nil }
       do {
@@ -141,6 +150,7 @@ extension ChatView {
         streamingAssistantMessage = .init()
         var receivedEnd = false
         for try await chunk in chats.stream(id: chatID, content: prompt) {
+          // 2. Append each chunk so the UI can render the live response.
           try Task.checkCancellation()
           withAnimation(.smooth(duration: 0.18)) {
             streamChunks.append(chunk)
@@ -148,6 +158,7 @@ extension ChatView {
             scrollRevision &+= 1
           }
           if case .end(let end) = chunk {
+            // 3. Replace the temporary stream with the persisted messages.
             receivedEnd = true
             if end.outcome == .failed {
               throw SubmissionError.server(end.error?.message ?? "The response failed.")
@@ -176,12 +187,14 @@ extension ChatView {
       }
     }
 
+    // Handles dismissError.
     func dismissError() {
       print("[App:ChatVM] Dismissing error")
       errorMessage = nil
       if submissionState == .failed { submissionState = .idle }
     }
 
+    // Handles startNewChat.
     func startNewChat() {
       print("[App:ChatVM] Starting new chat")
       submissionTask?.cancel()
@@ -199,6 +212,7 @@ extension ChatView {
       scrollRevision &+= 1
     }
 
+    // Handles cancelSubmission.
     func cancelSubmission() {
       print("[App:ChatVM] Cancelling submission")
       submissionTask?.cancel()
@@ -208,6 +222,7 @@ extension ChatView {
       if submissionState.isBusy { submissionState = .idle }
     }
 
+    // Handles startDictation.
     func startDictation() async {
       print("[App:ChatVM] Starting dictation")
       guard dictationState == .idle else { return }
@@ -222,6 +237,7 @@ extension ChatView {
       }
     }
 
+    // Handles finishDictation.
     func finishDictation() async {
       print("[App:ChatVM] Finishing dictation")
       guard dictationState == .recording else { return }
@@ -236,6 +252,7 @@ extension ChatView {
 
     /// Transcribes the most recent recording into the prompt text.
     func transcribe() async {
+      // 1. Move into the transcribing state and capture a generation token.
       print("[App:ChatVM] Starting transcription")
       guard dictationState != .transcribing else { return }
       guard let fileURL = audioRecorder.fileURL() else {
@@ -255,9 +272,11 @@ extension ChatView {
       }
       transcriptionTask = task
 
+      // 2. Wait for the task so state cleanup completes before returning.
       await task.value
     }
 
+    // Handles cancelDictation.
     func cancelDictation() {
       print("[App:ChatVM] Cancelling dictation")
       dictationGeneration &+= 1
@@ -272,7 +291,9 @@ extension ChatView {
       isTranscribing = false
     }
 
+    // Handles transcribe.
     private func transcribe(fileAt fileURL: URL, generation: UInt) async {
+      // 1. Request the transcript and ignore stale or cancelled results.
       defer {
         if generation == dictationGeneration {
           transcriptionTask = nil
@@ -295,6 +316,7 @@ extension ChatView {
       text = "\(text) \(transcription)".trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    // Defines SubmissionError.
     private enum SubmissionError: LocalizedError {
       case missingChatID
       case missingEnd

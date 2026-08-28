@@ -1,3 +1,4 @@
+// ChatView+Conversation: UI and service logic for this feature.
 //
 //  ChatView+Conversation.swift
 //  SarvamDemoApp
@@ -7,7 +8,9 @@
 
 import SwiftUI
 
+// Defines ChatView.
 extension ChatView {
+  // Defines Conversation.
   struct Conversation: View {
     @Environment(ViewModel.self) private var viewModel
     @State private var scrollPosition = ScrollPosition(edge: .bottom)

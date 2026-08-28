@@ -1,6 +1,9 @@
+// ChatView+PromptBar: UI and service logic for this feature.
 import SwiftUI
 
+// Defines ChatView.
 extension ChatView {
+  // Defines PromptBar.
   struct PromptBar: View {
     @Environment(ViewModel.self) private var viewModel
 
@@ -20,6 +23,7 @@ extension ChatView {
     }
   }
 
+  // Defines MainInput.
   private struct MainInput: View {
     let namespace: Namespace.ID
 
@@ -41,6 +45,7 @@ extension ChatView {
     }
   }
 
+  // Defines ActionBar.
   private struct ActionBar: View {
     @Environment(ViewModel.self) private var viewModel
 

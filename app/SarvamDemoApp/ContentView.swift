@@ -1,3 +1,4 @@
+// ContentView: UI and service logic for this feature.
 //
 //  ContentView.swift
 //  SarvamDemoApp
@@ -7,6 +8,7 @@
 
 import SwiftUI
 
+// Defines ContentView.
 struct ContentView: View {
   @AppStorage("isLoggedIn") private var isLoggedIn = false
 

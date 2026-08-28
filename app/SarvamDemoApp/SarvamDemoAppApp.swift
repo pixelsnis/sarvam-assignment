@@ -1,3 +1,4 @@
+// SarvamDemoAppApp: UI and service logic for this feature.
 //
 //  SarvamDemoAppApp.swift
 //  SarvamDemoApp
@@ -8,6 +9,7 @@
 import SwiftUI
 
 @main
+// Defines SarvamDemoAppApp.
 struct SarvamDemoAppApp: App {
   @State private var auth = Auth.shared
   @State private var endpointDiscovery: APIEndpointDiscovery?

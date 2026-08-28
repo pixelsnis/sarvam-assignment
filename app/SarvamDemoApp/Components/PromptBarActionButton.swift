@@ -1,3 +1,4 @@
+// PromptBarActionButton: UI and service logic for this feature.
 //
 //  PromptBarActionButton.swift
 //  SarvamDemoApp
@@ -7,6 +8,7 @@
 
 import SwiftUI
 
+// Defines PromptBarActionButton.
 struct PromptBarActionButton: View {
   let titleKey: String
   let systemImage: String
@@ -52,6 +54,7 @@ struct PromptBarActionButton: View {
     .animation(.default, value: isEnabled)
   }
   
+  // Handles onPress.
   private func onPress() {
     guard !loading.wrappedValue, isEnabled else { return }
     

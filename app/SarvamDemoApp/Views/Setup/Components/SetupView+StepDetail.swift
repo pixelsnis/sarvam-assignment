@@ -1,3 +1,4 @@
+// SetupView+StepDetail: UI and service logic for this feature.
 //
 //  SetupView+StepDetail.swift
 //  SarvamDemoApp
@@ -7,7 +8,9 @@
 
 import SwiftUI
 
+// Defines SetupView.
 extension SetupView {
+  // Defines StepDetail.
   struct StepDetail: View {
     let namespace: Namespace.ID
     @Environment(ViewModel.self) private var viewModel
@@ -63,6 +66,7 @@ extension SetupView {
     }
   }
   
+  // Defines InboxSubheader.
   private struct InboxSubheader: View {
     @Environment(ViewModel.self) private var viewModel
     @Environment(\.openURL) private var openURL

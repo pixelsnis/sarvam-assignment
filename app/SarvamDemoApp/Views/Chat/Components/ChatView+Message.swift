@@ -1,6 +1,9 @@
+// ChatView+Message: UI and service logic for this feature.
 import SwiftUI
 
+// Defines ChatView.
 extension ChatView {
+  // Defines AssistantEyebrowState.
   private enum AssistantEyebrowState: Equatable {
     case hidden
     case visible(String)
@@ -49,6 +52,7 @@ extension ChatView {
     }
   }
 
+  // Defines AssistantEyebrowView.
   private struct AssistantEyebrowView: View {
     let label: String
 
@@ -67,6 +71,7 @@ extension ChatView {
     }
   }
 
+  // Defines AssistantMessageView.
   struct AssistantMessageView: View {
     let message: APIClient.AssistantMessage
 
@@ -97,6 +102,7 @@ extension ChatView {
     }
   }
 
+  // Defines UserMessageView.
   struct UserMessageView: View {
     let message: APIClient.UserMessage
 
@@ -116,6 +122,7 @@ extension ChatView {
     }
   }
   
+  // Defines StreamingAssistantMessageView.
   struct StreamingAssistantMessageView: View {
     let message: APIClient.StreamingAssistantMessage
 

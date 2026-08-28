@@ -1,6 +1,9 @@
+// ChatView+Toolbar: UI and service logic for this feature.
 import SwiftUI
 
+// Defines ChatView.
 extension ChatView {
+  // Defines Toolbar.
   struct Toolbar: ToolbarContent {
     @Environment(ViewModel.self) private var viewModel
 

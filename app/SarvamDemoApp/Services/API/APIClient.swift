@@ -1,7 +1,9 @@
+// APIClient: UI and service logic for this feature.
 import Alamofire
 import Foundation
 
 nonisolated final class APIClient {
+  // Defines Configuration.
   struct Configuration {
     let baseURL: URL
 
@@ -70,6 +72,7 @@ nonisolated final class APIClient {
 
   }
 
+  // Handles updateBaseURL.
   func updateBaseURL(_ baseURL: URL) {
     print("[App:API] Base URL discovered")
     configuration = Configuration(baseURL: baseURL)

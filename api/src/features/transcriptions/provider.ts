@@ -1,3 +1,4 @@
+// provider: project logic for this module.
 import { auth } from "../auth";
 import { TranscriptionHttpError } from "./errors";
 import type { TranscriptionDependencies, TranscriptionUser } from "./types";
@@ -6,10 +7,12 @@ import { isTranscriptionPayload } from "./validation";
 const SARVAM_SPEECH_TO_TEXT_URL = "https://api.sarvam.ai/speech-to-text";
 const SARVAM_MODEL = "saaras:v3";
 
+// Defines defaultGetSession.
 function defaultGetSession(headers: Headers): Promise<TranscriptionUser | null> {
   return auth.api.getSession({ headers });
 }
 
+// Exports createTranscriptionDependencies.
 export function createTranscriptionDependencies(): TranscriptionDependencies {
   return {
     getSession: defaultGetSession,
@@ -18,10 +21,12 @@ export function createTranscriptionDependencies(): TranscriptionDependencies {
   };
 }
 
+// Exports requestTranscription.
 export async function requestTranscription(
   file: File,
   dependencies: TranscriptionDependencies,
 ): Promise<string> {
+  // 1. Fail early when the upstream provider is not configured.
   if (!dependencies.sarvamApiKey) {
     throw new TranscriptionHttpError(
       500,
@@ -34,6 +39,7 @@ export async function requestTranscription(
   body.set("file", file, file.name || "audio");
   body.set("model", SARVAM_MODEL);
 
+  // 2. Send the audio file to Sarvam's speech-to-text endpoint.
   let response: Response;
   try {
     response = await dependencies.fetch(SARVAM_SPEECH_TO_TEXT_URL, {
@@ -55,6 +61,7 @@ export async function requestTranscription(
 
   const payload = await response.json().catch(() => undefined);
 
+  // 3. Normalize upstream failures and validate the response shape.
   if (!response.ok) {
     throw new TranscriptionHttpError(
       502,

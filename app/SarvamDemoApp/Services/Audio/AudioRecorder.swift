@@ -1,3 +1,4 @@
+// AudioRecorder: UI and service logic for this feature.
 import AVFoundation
 import Foundation
 import Observation
@@ -5,6 +6,7 @@ import Observation
 @MainActor
 @Observable
 final class AudioRecorder {
+  // Defines Error.
   enum Error: LocalizedError {
     case microphonePermissionDenied
     case microphoneUnavailable
@@ -60,7 +62,9 @@ final class AudioRecorder {
     self.recorderSettings = recorderSettings
   }
 
+  // Handles requestPermission.
   func requestPermission() async -> Bool {
+    // 1. Reuse an existing permission or request access from the system.
     print("[App:Audio] Checking microphone permission")
     return switch AVAudioApplication.shared.recordPermission {
     case .granted:
@@ -78,7 +82,9 @@ final class AudioRecorder {
     }
   }
 
+  // Handles start.
   func start() async throws {
+    // 1. Check recording prerequisites and clear any previous recording state.
     print("[App:Audio] Recording started")
     guard !isRecording else {
       throw Error.alreadyRecording
@@ -101,6 +107,7 @@ final class AudioRecorder {
     activeMicrophoneMode = nil
 
     do {
+      // 2. Configure the audio session and start recording to a temporary file.
       // Voice Isolation is selected by the system/user microphone mode. The
       // voice-chat mode provides the supported voice-processing fallback on
       // OS versions where recording mic modes cannot be set programmatically.
@@ -136,7 +143,9 @@ final class AudioRecorder {
   }
 
   @discardableResult
+  // Handles stop.
   func stop() -> URL? {
+    // 1. Stop sampling and finalize the current recording, if one exists.
     print("[App:Audio] Recording stopped")
     waveformTask?.cancel()
     waveformTask = nil
@@ -154,6 +163,7 @@ final class AudioRecorder {
     return fileURL()
   }
 
+  // Handles fileURL.
   func fileURL() -> URL? {
     guard let recordingURL,
           fileManager.fileExists(atPath: recordingURL.path) else {
@@ -163,13 +173,16 @@ final class AudioRecorder {
     return recordingURL
   }
 
+  // Handles makeRecordingURL.
   private func makeRecordingURL() -> URL {
     fileManager.temporaryDirectory
       .appendingPathComponent("recording-\(UUID().uuidString)")
       .appendingPathExtension("m4a")
   }
 
+  // Handles startWaveformSampling.
   private func startWaveformSampling() {
+    // 1. Sample the recorder meter until recording stops or the task is cancelled.
     waveformTask = Task { [weak self] in
       while !Task.isCancelled {
         do {
@@ -187,7 +200,9 @@ final class AudioRecorder {
     }
   }
 
+  // Handles captureWaveformSample.
   private func captureWaveformSample() {
+    // 1. Convert the current meter values into a normalized UI amplitude.
     guard let recorder, recorder.isRecording else {
       return
     }

@@ -1,6 +1,9 @@
+// Auth+Session: UI and service logic for this feature.
 import Foundation
 
+// Defines Auth.
 extension Auth {
+  // Handles refreshSession.
   func refreshSession() async {
     print("[App:Auth] Refreshing session")
     guard !isRefreshing else { return }
@@ -23,6 +26,7 @@ extension Auth {
     }
   }
 
+  // Handles signOut.
   func signOut() async throws {
     print("[App:Auth] Signing out")
     setLoading(true)

@@ -1,3 +1,4 @@
+// ChatView: UI and service logic for this feature.
 //
 //  ChatView.swift
 //  SarvamDemoApp
@@ -7,6 +8,7 @@
 
 import SwiftUI
 
+// Defines ChatView.
 struct ChatView: View {
   @State private var viewModel = ViewModel()
 

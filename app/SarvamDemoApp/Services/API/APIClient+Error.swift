@@ -1,6 +1,9 @@
+// APIClient+Error: UI and service logic for this feature.
 import Foundation
 
+// Defines APIClient.
 extension APIClient {
+  // Defines APIError.
   enum APIError: LocalizedError {
     case encoding(Error)
     case decoding(Error)
@@ -9,6 +12,7 @@ extension APIClient {
     case invalidResponse
     case http(statusCode: Int, payload: ErrorPayload?)
 
+    // Defines ErrorPayload.
     struct ErrorPayload: Decodable {
       let code: String?
       let message: String?
