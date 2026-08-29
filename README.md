@@ -8,7 +8,7 @@ This project was built as a design engineering assignment. The goal was to trans
 
 ## Demo Screen Recording
 
-https://github.com/user-attachments/assets/4deba44d-60e6-43ce-a359-d22a2eae73ff
+https://github.com/user-attachments/assets/f8e939de-251d-43a0-af8f-1e96ef7e92c8
 
 ## What’s implemented
 
