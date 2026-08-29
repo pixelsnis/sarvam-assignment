@@ -99,9 +99,8 @@ extension SetupView {
             viewModel.updateOTP(value)
           }
           .keyboardType(.numberPad)
-          .fontDesign(.monospaced)
+          .font(.brandMonospaced)
           .tracking(20)
-          .fontWeight(.semibold)
           .foregroundStyle(viewModel.error == "Invalid OTP." ? .red : .primary)
           .multilineTextAlignment(.center)
           .frame(height: 54)
@@ -113,10 +112,11 @@ extension SetupView {
           Button("Resend OTP") {
             Task { await viewModel.resendOTP() }
           }
+          .font(.brandHeadline)
           .disabled(viewModel.resendSecondsRemaining > 0 || viewModel.isLoading)
         } label: {
           Image(systemName: "arrow.clockwise")
-            .font(.title3.weight(.semibold))
+            .font(.brandTitle3)
             .frame(width: 54, height: 54)
             .glassEffect(.regular.interactive(), in: .circle)
             .contentShape(.circle)

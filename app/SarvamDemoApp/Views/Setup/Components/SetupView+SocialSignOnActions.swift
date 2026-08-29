@@ -37,7 +37,7 @@ extension SetupView {
             .frame(height: 20)
           Text("Sign in with Google")
         }
-        .font(.headline)
+        .font(.brandHeadline)
         .foregroundStyle(Color(uiColor: .systemBackground))
         .padding(16)
         .frame(maxWidth: .infinity)
@@ -57,7 +57,7 @@ extension SetupView {
         
       } label: {
         Label("Sign in with Apple", systemImage: "applelogo")
-          .font(.headline)
+          .font(.brandHeadline)
           .foregroundStyle(Color(uiColor: .label))
           .padding(16)
           .frame(maxWidth: .infinity)

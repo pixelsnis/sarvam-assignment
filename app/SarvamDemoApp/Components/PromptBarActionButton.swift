@@ -80,7 +80,7 @@ struct PromptBarActionButton: View {
     }
     .animation(.default, value: loading.wrappedValue)
     .labelStyle(.iconOnly)
-    .font(.headline)
+    .font(.brandHeadline)
   }
 }
 

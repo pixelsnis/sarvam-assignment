@@ -27,14 +27,14 @@ struct ChatView: View {
         Self.PromptBar()
         if let error = viewModel.errorMessage {
           HStack(spacing: 8) {
-            Text(error).font(.caption).foregroundStyle(.secondary)
+            Text(error).font(.brandCaption).foregroundStyle(.secondary)
             Spacer()
             if viewModel.pendingPrompt != nil {
               Button("Retry") { Task { await viewModel.submit() } }
-                .font(.caption.weight(.semibold))
+                .font(.brandCaption)
             }
             Button("Dismiss") { viewModel.dismissError() }
-              .font(.caption.weight(.semibold))
+              .font(.brandCaption)
           }
           .padding(.horizontal, 14)
           .padding(.vertical, 8)

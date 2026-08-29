@@ -17,7 +17,10 @@
 	</dict>
 	<key>UIAppFonts</key>
 	<array>
-		<string>Font/SeasonMix-SemiBold.otf</string>
+		<string>Font/SeasonMix-Medium.otf</string>
+		<string>Font/MatterRegular.otf</string>
+		<string>Font/MatterMedium.otf</string>
+		<string>Font/MatterSemiMonoRegular.otf</string>
 	</array>
 </dict>
 </plist>

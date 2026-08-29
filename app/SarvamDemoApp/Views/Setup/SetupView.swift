@@ -27,7 +27,7 @@ struct SetupView: View {
           Self.SocialSignOnActions()
 
           Text("or")
-            .font(.subheadline)
+            .font(.brandSubheadline)
             .foregroundStyle(.secondary)
         }
         .transition(.blurReplace)
@@ -39,7 +39,7 @@ struct SetupView: View {
         Text(
           "By signing up, you agree to the\n[Terms of Service](https://www.sarvam.ai/terms-of-service) and [Privacy Policy](https://www.sarvam.ai/privacy-policy)."
         )
-        .font(.subheadline)
+        .font(.brandSubheadline)
         .multilineTextAlignment(.center)
         .tint(.primary)
         .foregroundStyle(.secondary)

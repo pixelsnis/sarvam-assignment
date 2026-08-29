@@ -37,12 +37,11 @@ extension SetupView {
         VStack(alignment: .leading, spacing: 8) {
           Text(title)
             .contentTransition(.interpolate)
-            // TODO: Update this to Season Mix
-            .font(.title3.weight(.medium))
+            .font(.brandTitle3)
           
           if let error = viewModel.error {
             Label(error, systemImage: "xmark")
-              .font(.subheadline)
+              .font(.brandSubheadline)
               .foregroundStyle(.red)
               .transition(.push(from: .bottom))
           } else {
@@ -52,7 +51,7 @@ extension SetupView {
                 .transition(.push(from: .bottom))
             case .createAccount:
               Text("Full name would be great, but a nickname works!")
-                .font(.subheadline)
+                .font(.brandSubheadline)
                 .foregroundStyle(.secondary)
                 .transition(.push(from: .bottom))
             default:
@@ -85,7 +84,7 @@ extension SetupView {
           }
         }
       }
-      .font(.subheadline)
+      .font(.brandSubheadline)
     }
   }
 }

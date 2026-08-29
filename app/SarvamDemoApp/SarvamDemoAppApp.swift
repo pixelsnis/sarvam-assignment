@@ -14,9 +14,14 @@ struct SarvamDemoAppApp: App {
   @State private var auth = Auth.shared
   @State private var endpointDiscovery: APIEndpointDiscovery?
 
+  init() {
+    BrandFontRegistrar.registerFonts()
+  }
+
   var body: some Scene {
     WindowGroup {
       ContentView()
+        .font(.brandBody)
         .environment(auth)
         .task {
           let discovery = APIEndpointDiscovery { _ in }
